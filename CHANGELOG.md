@@ -10,6 +10,38 @@ Versions here are the plugin's own, as recorded in
 
 ## [Unreleased]
 
+### Changed
+
+- `init` now asks where the repository will be pushed, in the same question as
+  the base branch. The URL is never inferred — not from `package.json`, not
+  from a `gh` config, not from the directory name — because the remote is the
+  one fact about a new repo that only the person creating it knows, and a
+  wrong one is worse than none. It is typed into the question's "Other" field,
+  or the step is skipped; skipping is a finished answer, not a deferral.
+- A URL is checked with `git ls-remote` before `origin` is wired up, and one
+  that does not answer is reported and handed back rather than refused. A
+  repository nobody has created on the host yet, a private one, and a typo are
+  indistinguishable from the client side, so the user decides whether to keep
+  it, retype it or drop it.
+- A project that is already a repo but has no remote is offered the same
+  question; one that already has an `origin` is left exactly as it is. Nothing
+  is ever pushed — the closing report prints `git push -u origin <branch>` as
+  text, to be run once `commit` has made the first commit.
+- `init` now asks everything in a single question, before anything is created.
+  The base branch, the remote, which editor and tool folders git ignores, and
+  whether to write the `.gitignore` are all answerable from the context the
+  skill already gathered at load, and none of them depends on another, so
+  spending a separate round trip on each only made the skill slower to get
+  through. A question is included only when there is something to decide: no
+  editor folders on disk, no folder question; a `.gitignore` already there, no
+  `.gitignore` question.
+- The drafted `.gitignore` is written on the strength of that answer and printed
+  in full in the closing report, rather than printed first and written second.
+  Nothing lands unseen — the reading moved from before the write to after it —
+  and "show me the draft first" is still there for anyone who wants the old
+  order. Appending to an existing `.gitignore` no longer asks at all, since the
+  appended lines are exactly the folders just chosen.
+
 ## [0.3.1] - 2026-08-14
 
 ### Changed

@@ -12,15 +12,16 @@ Each skill is grounded in a published spec rather than in house habit:
 once in [references/](references/), so no two skills can drift apart on what a
 `feat` commit means or where a version number is kept.
 
-Every decision that is the user's to make — the branch type, what lands in a
-commit, the version bump, whether a tag gets pushed — goes through a multiple
-choice question, never a silent guess and never a typed reply in prose.
+Every decision that is the user's to make — the branch type, where a new repo
+gets pushed, what lands in a commit, the version bump, whether a tag gets
+pushed — goes through a multiple choice question, never a silent guess and
+never a typed reply in prose.
 
 ## Skills
 
 | Skill | What it does | Follows |
 |---|---|---|
-| [`init`](skills/init/SKILL.md) | Reports whether the project root is already a repo, is nested inside a parent one, or is untracked. For an untracked root: confirms the base branch name, runs `git init`, and drafts a starter `.gitignore` — asking which of the editor and tool folders actually present (`.vscode/`, `.idea/`, `.zed/`, `.fleet/`, `.claude/`, a `pm` docs root) git should ignore. An existing `.gitignore` is appended to, never redrafted | [gitignore-patterns](references/gitignore-patterns.md) |
+| [`init`](skills/init/SKILL.md) | Reports whether the project root is already a repo, is nested inside a parent one, or is untracked. For an untracked root: asks everything in one question before anything is created — the base branch, the remote URL, which of the editor and tool folders actually present (`.vscode/`, `.idea/`, `.zed/`, `.fleet/`, `.claude/`, a `pm` docs root) git should ignore, and whether to write the `.gitignore` — then runs `git init`, wires up `origin` when a URL was given, and drafts the file, printing it in full in the closing report. The remote is optional and never guessed, an unreachable URL is a warning rather than a refusal, and an `origin` that already exists is left alone. An existing `.gitignore` is appended to, never redrafted | [gitignore-patterns](references/gitignore-patterns.md) |
 | [`commit`](skills/commit/SKILL.md) | Screens the files about to enter the commit for secrets, dependency directories, build output and OS cruft; groups the working set into the fewest commits that pass the "together test"; drafts a conventional message per group and confirms each one before it lands | [Conventional Commits 1.0.0](references/conventional-commits-1.0.0.md) |
 | [`branch`](skills/branch/SKILL.md) | Picks the prefix (`feat/`, `fix/`, `hotfix/`, `release/`, `chore/`), validates the name against the spec, and creates and switches to the branch | [Conventional Branch 1.0.0](references/conventional-branch-1.0.0.md) |
 | [`changelog`](skills/changelog/SKILL.md) | Creates a `CHANGELOG.md`, adds entries to `## [Unreleased]`, or promotes that section into a versioned one. Entries are written for humans, not copied from commit subjects | [Keep a Changelog 1.1.0](references/keep-a-changelog-1.1.0.md) |
