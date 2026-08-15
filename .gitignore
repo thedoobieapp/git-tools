@@ -1,0 +1,9 @@
+# SYSTEM
+.DS_Store
+
+# IDE
+.vscode/
+
+# CLAUDE
+.claude/
+skills-lock.json
