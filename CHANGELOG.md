@@ -10,6 +10,8 @@ Versions here are the plugin's own, as recorded in
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-15
+
 ### Changed
 
 - `init` now asks where the repository will be pushed, in the same question as

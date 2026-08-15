@@ -200,7 +200,7 @@ VERBOSE=1 ./tests/run-tests.sh     # also print what each passing test establish
 ```
 
 The run exits 0 only if every test passed. **29 tests across 4 case files, all
-green** as of `0.3.1`.
+green** as of `0.4.0`.
 
 | Case file | Tests | What it holds the plugin to |
 |---|---|---|
