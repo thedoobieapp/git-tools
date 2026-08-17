@@ -161,7 +161,7 @@ them — write nothing and say the file was left unchanged.
 **If there is no `.gitignore`**, draft it:
 
 1. Detect the project type from the root contents — `package.json` (Node), `pyproject.toml` / `requirements.txt` (Python), `Cargo.toml` (Rust), `go.mod` (Go), `Gemfile` (Ruby), `composer.json` (PHP), Xcode/Android project files, and so on. More than one may apply.
-2. Read `${CLAUDE_PLUGIN_ROOT}/references/gitignore-patterns.md` for the categories worth ignoring — secrets, dependencies, build output, OS/editor cruft, logs and caches, large blobs. If that file cannot be read, fall back to the standard ignore set for the detected stacks.
+2. Read `${CLAUDE_PLUGIN_ROOT}/skills/docs/gitignore-patterns.md` for the categories worth ignoring — secrets, dependencies, build output, OS/editor cruft, logs and caches, large blobs. If that file cannot be read, fall back to the standard ignore set for the detected stacks.
 3. Draft a `.gitignore` covering the categories that actually apply to this project, and check the root contents for anything already sitting there that matches (a stray `.DS_Store`, a `node_modules/`, a `.env`) so it is covered. The editor and tool folders come from Step 2's Ignore answer and from nowhere else — a folder the user chose to track must not appear in the draft, whatever the reference file says about it.
 
 Then follow Step 2's Gitignore answer:
@@ -234,4 +234,4 @@ never run here:
 
 # Links
 
-- [gitignore-patterns](../../references/gitignore-patterns.md)
+- [gitignore-patterns](../docs/gitignore-patterns.md)

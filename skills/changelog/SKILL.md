@@ -16,7 +16,7 @@ model: sonnet
 
 ## Your task
 
-Maintain CHANGELOG.md following `${CLAUDE_PLUGIN_ROOT}/references/keep-a-changelog-1.1.0.md` conventions.
+Maintain CHANGELOG.md following `${CLAUDE_PLUGIN_ROOT}/skills/docs/keep-a-changelog-1.1.0.md` conventions.
 
 ### Step 0 — Confirm there is a repo
 
@@ -57,7 +57,7 @@ since the repo's first commit, or a range the user names.
 
 Group changes into the six standard categories, mapping conventional commit types
 with the table in
-`${CLAUDE_PLUGIN_ROOT}/references/commit-type-mapping.md`.
+`${CLAUDE_PLUGIN_ROOT}/skills/docs/commit-type-mapping.md`.
 
 Write entries as human-readable descriptions — not raw commit messages. Each entry should explain what changed from a user's perspective.
 
@@ -132,5 +132,5 @@ Add entries under `## [Unreleased]`, creating category subsections as needed. Pr
 ---
 # Links
 
-- [keep-a-changelog-1.1.0](../../references/keep-a-changelog-1.1.0.md)
-- [commit-type-mapping](../../references/commit-type-mapping.md)
+- [keep-a-changelog-1.1.0](../docs/keep-a-changelog-1.1.0.md)
+- [commit-type-mapping](../docs/commit-type-mapping.md)

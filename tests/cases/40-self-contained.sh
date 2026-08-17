@@ -105,9 +105,10 @@ test_no_document_reaches_for_another_plugin() {
   # `plugins/…` is a path that exists in the repository this plugin is developed
   # in and nowhere else. A skill that names one is reading a file that will not
   # be there once installed.
-  offenders="$(grep -rn 'plugins/' "$SKILLS_DIR" "$REFERENCES_DIR" 2>/dev/null)"
+  # $SKILLS_DIR covers the references too — they live under it.
+  offenders="$(grep -rn 'plugins/' "$SKILLS_DIR" 2>/dev/null)"
   assert_empty "$offenders" "a document points at a marketplace path"
-  offenders="$(grep -rn '\.\./\.\./\.\.' "$SKILLS_DIR" "$REFERENCES_DIR" 2>/dev/null)"
+  offenders="$(grep -rn '\.\./\.\./\.\.' "$SKILLS_DIR" 2>/dev/null)"
   assert_empty "$offenders" "a relative path climbs above the plugin root"
 }
 
@@ -115,13 +116,26 @@ test_every_reference_file_is_used() {
   desc "references — every file is named by a skill, and every skill's is there"
   # The other half of completeness: a reference nothing reads is dead weight
   # shipped to every user, and it is usually the leftover of a link that moved.
+  #
+  # Only the SKILL.md files count as readers. The references live under
+  # skills/ and cross-link each other, so grepping the whole directory would
+  # find every file named by a sibling and the test would pass on its own
+  # footprints.
+  #
+  # The references' own SKILL.md — the one that makes the directory install as a
+  # skill — is neither a reference nor a reader. Counting it as a reader would
+  # let the carrier vouch for its own contents, which is the same footprint
+  # problem one level in.
+  readers="$(skill_files | grep -v "^$REFERENCES_DIR/SKILL.md$")"
   unused=""
   for f in "$REFERENCES_DIR"/*.md; do
     [ -f "$f" ] || continue
-    grep -rq "$(basename "$f")" "$SKILLS_DIR" || unused="${unused:+$unused }$(basename "$f")"
+    [ "$(basename "$f")" = "SKILL.md" ] && continue
+    grep -q "$(basename "$f")" $readers \
+      || unused="${unused:+$unused }$(basename "$f")"
   done
   assert_empty "$unused" "a reference file no skill points at"
-  n="$(ls "$REFERENCES_DIR"/*.md 2>/dev/null | wc -l | tr -d ' ')"
+  n="$(ls "$REFERENCES_DIR"/*.md 2>/dev/null | grep -cv '/SKILL\.md$' | tr -d ' ')"
   assert_ne "$n" "0" "the references directory must not be empty"
   note "$n reference files, all of them read by at least one skill"
 }

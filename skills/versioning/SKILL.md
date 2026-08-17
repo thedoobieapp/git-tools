@@ -17,7 +17,7 @@ model: sonnet
 
 ## Your task
 
-Manage version numbers following `${CLAUDE_PLUGIN_ROOT}/references/semantic-versioning-2.0.0.md` conventions.
+Manage version numbers following `${CLAUDE_PLUGIN_ROOT}/skills/docs/semantic-versioning-2.0.0.md` conventions.
 
 ### Step 0 — Confirm there is a repo
 
@@ -28,7 +28,7 @@ nothing below applies until there is one.
 ### Step 1 — Detect current version
 
 Look for the project version in the locations listed in
-`${CLAUDE_PLUGIN_ROOT}/references/version-sources.md` —
+`${CLAUDE_PLUGIN_ROOT}/skills/docs/version-sources.md` —
 first match wins, but every other file carrying a version still gets updated.
 
 If no version is found, use **AskUserQuestion** to establish the starting point —
@@ -40,7 +40,7 @@ Report the detected version and its source file to the user.
 ### Step 2 — Analyze commits for bump suggestion
 
 Review conventional commits since the last version tag and apply the bump table in
-`${CLAUDE_PLUGIN_ROOT}/references/version-sources.md`.
+`${CLAUDE_PLUGIN_ROOT}/skills/docs/version-sources.md`.
 
 Present a summary:
 
@@ -114,5 +114,5 @@ Suggest next steps:
 
 # Links
 
-- [version-sources](../../references/version-sources.md)
-- [semantic-versioning-2.0.0](../../references/semantic-versioning-2.0.0.md)
+- [version-sources](../docs/version-sources.md)
+- [semantic-versioning-2.0.0](../docs/semantic-versioning-2.0.0.md)

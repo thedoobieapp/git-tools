@@ -10,10 +10,15 @@
 . "$(dirname "$0")/../lib/harness.sh"
 
 test_the_expected_skills_are_the_ones_on_disk() {
-  desc "skills — the plugin ships exactly the six skills this suite knows about"
+  desc "skills — the plugin ships exactly the seven skills this suite knows about"
   # A skill added without a line here is a skill nobody decided to test.
+  #
+  # `docs` is the odd one. It is the shared reference material, and it carries a
+  # SKILL.md so the directory installs the way a skill does rather than being
+  # left behind. It is a skill by every rule this file checks, so it is listed
+  # here and held to all of them.
   found="$(for s in $(skill_files); do basename "$(dirname "$s")"; done | sort | tr '\n' ' ')"
-  assert_eq "$found" "branch changelog commit init release versioning " \
+  assert_eq "$found" "branch changelog commit docs init release versioning " \
     "the skill directories under skills/"
 }
 

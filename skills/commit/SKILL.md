@@ -39,7 +39,7 @@ nothing below applies until there is one.
 Before drafting a message, screen the files about to enter the commit so nothing that belongs outside the repo (secrets, dependencies, build output, OS/editor cruft) slips in. This screen focuses on **newly added / untracked files** — `.gitignore` cannot un-track a file that is already tracked in git.
 
 1. Build the candidate set: **staged files** + **untracked-not-ignored files** (the latter get staged in the final step, so they count).
-2. Compare each candidate against the categories in `${CLAUDE_PLUGIN_ROOT}/references/gitignore-patterns.md` and flag secrets, dependency directories, build output, OS/editor cruft, logs/caches, and unusually large or binary blobs. Run `git check-ignore <path>` to avoid re-flagging anything already ignored.
+2. Compare each candidate against the categories in `${CLAUDE_PLUGIN_ROOT}/skills/docs/gitignore-patterns.md` and flag secrets, dependency directories, build output, OS/editor cruft, logs/caches, and unusually large or binary blobs. Run `git check-ignore <path>` to avoid re-flagging anything already ignored.
 3. If nothing is flagged, continue to the next step silently.
 4. If files are flagged, list them (grouped by reason) and use **AskUserQuestion** to let the user choose what to do per group:
    - **Add to .gitignore** — append the appropriate pattern to `.gitignore` (create the file if missing), then unstage the file with `git restore --staged <path>`
@@ -60,7 +60,7 @@ Completion: you have the smallest number of groups where every group passes the 
 
 ### Step 4 — Draft the commit message(s)
 
-Draft one message per group from Step 3, each following `${CLAUDE_PLUGIN_ROOT}/references/conventional-commits-1.0.0.md`
+Draft one message per group from Step 3, each following `${CLAUDE_PLUGIN_ROOT}/skills/docs/conventional-commits-1.0.0.md`
 
 **Choosing the type:**
 
@@ -155,6 +155,6 @@ EOF
 
 # Links
 
-- [conventional-commits-1.0.0](../../references/conventional-commits-1.0.0.md)
+- [conventional-commits-1.0.0](../docs/conventional-commits-1.0.0.md)
 - [init](../init/SKILL.md)
-- [gitignore-patterns](../../references/gitignore-patterns.md)
+- [gitignore-patterns](../docs/gitignore-patterns.md)

@@ -9,8 +9,8 @@ Each skill is grounded in a published spec rather than in house habit:
 [Conventional Branch 1.0.0](https://conventional-branch.github.io/),
 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html). The specs live
-once in [references/](references/), so no two skills can drift apart on what a
-`feat` commit means or where a version number is kept.
+once in [skills/docs/](skills/docs/), so no two skills can drift
+apart on what a `feat` commit means or where a version number is kept.
 
 Every decision that is the user's to make — the branch type, where a new repo
 gets pushed, what lands in a commit, the version bump, whether a tag gets
@@ -21,11 +21,11 @@ never a typed reply in prose.
 
 | Skill | What it does | Follows |
 |---|---|---|
-| [`init`](skills/init/SKILL.md) | Reports whether the project root is already a repo, is nested inside a parent one, or is untracked. For an untracked root: asks everything in one question before anything is created — the base branch, the remote URL, which of the editor and tool folders actually present (`.vscode/`, `.idea/`, `.zed/`, `.fleet/`, `.claude/`, a `pm` docs root) git should ignore, and whether to write the `.gitignore` — then runs `git init`, wires up `origin` when a URL was given, and drafts the file, printing it in full in the closing report. The remote is optional and never guessed, an unreachable URL is a warning rather than a refusal, and an `origin` that already exists is left alone. An existing `.gitignore` is appended to, never redrafted | [gitignore-patterns](references/gitignore-patterns.md) |
-| [`commit`](skills/commit/SKILL.md) | Screens the files about to enter the commit for secrets, dependency directories, build output and OS cruft; groups the working set into the fewest commits that pass the "together test"; drafts a conventional message per group and confirms each one before it lands | [Conventional Commits 1.0.0](references/conventional-commits-1.0.0.md) |
-| [`branch`](skills/branch/SKILL.md) | Picks the prefix (`feat/`, `fix/`, `hotfix/`, `release/`, `chore/`), validates the name against the spec, and creates and switches to the branch | [Conventional Branch 1.0.0](references/conventional-branch-1.0.0.md) |
-| [`changelog`](skills/changelog/SKILL.md) | Creates a `CHANGELOG.md`, adds entries to `## [Unreleased]`, or promotes that section into a versioned one. Entries are written for humans, not copied from commit subjects | [Keep a Changelog 1.1.0](references/keep-a-changelog-1.1.0.md) |
-| [`versioning`](skills/versioning/SKILL.md) | Detects the current version and every file carrying it, derives the bump from the conventional commits since the last tag, updates all of them together, and tags | [Semantic Versioning 2.0.0](references/semantic-versioning-2.0.0.md) |
+| [`init`](skills/init/SKILL.md) | Reports whether the project root is already a repo, is nested inside a parent one, or is untracked. For an untracked root: asks everything in one question before anything is created — the base branch, the remote URL, which of the editor and tool folders actually present (`.vscode/`, `.idea/`, `.zed/`, `.fleet/`, `.claude/`, a `pm` docs root) git should ignore, and whether to write the `.gitignore` — then runs `git init`, wires up `origin` when a URL was given, and drafts the file, printing it in full in the closing report. The remote is optional and never guessed, an unreachable URL is a warning rather than a refusal, and an `origin` that already exists is left alone. An existing `.gitignore` is appended to, never redrafted | [gitignore-patterns](skills/docs/gitignore-patterns.md) |
+| [`commit`](skills/commit/SKILL.md) | Screens the files about to enter the commit for secrets, dependency directories, build output and OS cruft; groups the working set into the fewest commits that pass the "together test"; drafts a conventional message per group and confirms each one before it lands | [Conventional Commits 1.0.0](skills/docs/conventional-commits-1.0.0.md) |
+| [`branch`](skills/branch/SKILL.md) | Picks the prefix (`feat/`, `fix/`, `hotfix/`, `release/`, `chore/`), validates the name against the spec, and creates and switches to the branch | [Conventional Branch 1.0.0](skills/docs/conventional-branch-1.0.0.md) |
+| [`changelog`](skills/changelog/SKILL.md) | Creates a `CHANGELOG.md`, adds entries to `## [Unreleased]`, or promotes that section into a versioned one. Entries are written for humans, not copied from commit subjects | [Keep a Changelog 1.1.0](skills/docs/keep-a-changelog-1.1.0.md) |
+| [`versioning`](skills/versioning/SKILL.md) | Detects the current version and every file carrying it, derives the bump from the conventional commits since the last tag, updates all of them together, and tags | [Semantic Versioning 2.0.0](skills/docs/semantic-versioning-2.0.0.md) |
 | [`release`](skills/release/SKILL.md) | The whole sequence in one pass: bump, changelog promotion, every version file updated, one `chore: release X.Y.Z` commit and one annotated tag — behind a single confirmation. Pushes only when explicitly asked; local-only is the default | all of the above |
 
 `versioning` and `changelog` remain useful on their own — bumping a version
@@ -105,21 +105,22 @@ of failing when there isn't one.
 git-tools/
 ├── .claude-plugin/
 │   └── plugin.json                        # Plugin manifest (name, version, metadata)
-├── references/                            # Specs and tables, shared by every skill
-│   ├── commit-type-mapping.md
-│   ├── conventional-branch-1.0.0.md
-│   ├── conventional-commits-1.0.0.md
-│   ├── gitignore-patterns.md
-│   ├── keep-a-changelog-1.1.0.md
-│   ├── semantic-versioning-2.0.0.md
-│   └── version-sources.md
 ├── skills/
 │   ├── init/SKILL.md                      # One directory per skill
 │   ├── commit/SKILL.md
 │   ├── branch/SKILL.md
 │   ├── changelog/SKILL.md
 │   ├── versioning/SKILL.md
-│   └── release/SKILL.md
+│   ├── release/SKILL.md
+│   └── docs/                              # Specs and tables, shared by every skill
+│       ├── SKILL.md                       # Lists and reads the files beside it
+│       ├── commit-type-mapping.md
+│       ├── conventional-branch-1.0.0.md
+│       ├── conventional-commits-1.0.0.md
+│       ├── gitignore-patterns.md
+│       ├── keep-a-changelog-1.1.0.md
+│       ├── semantic-versioning-2.0.0.md
+│       └── version-sources.md
 ├── tests/                                 # The plugin's own suite — see Development
 │   ├── run-tests.sh
 │   ├── lib/harness.sh                     # desc/assert vocabulary, per-test temp dirs
@@ -140,20 +141,23 @@ git subcommands that skill actually needs.
 
 ## References
 
-Reference material lives once at the plugin root rather than once per skill, so
-several skills cite the same copy of a spec without the copies drifting. Skills
-read them as `${CLAUDE_PLUGIN_ROOT}/references/<file>.md` and link to them as
-`../../references/<file>.md`.
+Reference material lives once in `skills/docs/` rather than once per
+skill, so several skills cite the same copy of a spec without the copies
+drifting. The directory carries a small `SKILL.md` of its own, which is what
+makes it install alongside the skills rather than be left behind; that skill
+only lists the documents beside it and reads the one asked for. Skills read the
+files as `${CLAUDE_PLUGIN_ROOT}/skills/docs/<file>.md` and link to them as
+`../docs/<file>.md`.
 
 | File | Contents | Read by |
 |---|---|---|
-| [`conventional-commits-1.0.0.md`](references/conventional-commits-1.0.0.md) | The commit message spec | `commit` |
-| [`conventional-branch-1.0.0.md`](references/conventional-branch-1.0.0.md) | The branch naming spec | `branch` |
-| [`keep-a-changelog-1.1.0.md`](references/keep-a-changelog-1.1.0.md) | The changelog format | `changelog`, `release` |
-| [`semantic-versioning-2.0.0.md`](references/semantic-versioning-2.0.0.md) | The versioning spec | `versioning` |
-| [`commit-type-mapping.md`](references/commit-type-mapping.md) | Which commit type becomes which changelog category | `changelog`, `release` |
-| [`version-sources.md`](references/version-sources.md) | Where a version lives (`package.json`, `Cargo.toml`, `pyproject.toml`, `VERSION`, git tags, plugin and marketplace manifests), in precedence order, and the bump table | `versioning`, `release` |
-| [`gitignore-patterns.md`](references/gitignore-patterns.md) | What should never be committed, by category | `init`, `commit` |
+| [`conventional-commits-1.0.0.md`](skills/docs/conventional-commits-1.0.0.md) | The commit message spec | `commit` |
+| [`conventional-branch-1.0.0.md`](skills/docs/conventional-branch-1.0.0.md) | The branch naming spec | `branch` |
+| [`keep-a-changelog-1.1.0.md`](skills/docs/keep-a-changelog-1.1.0.md) | The changelog format | `changelog`, `release` |
+| [`semantic-versioning-2.0.0.md`](skills/docs/semantic-versioning-2.0.0.md) | The versioning spec | `versioning` |
+| [`commit-type-mapping.md`](skills/docs/commit-type-mapping.md) | Which commit type becomes which changelog category | `changelog`, `release` |
+| [`version-sources.md`](skills/docs/version-sources.md) | Where a version lives (`package.json`, `Cargo.toml`, `pyproject.toml`, `VERSION`, git tags, plugin and marketplace manifests), in precedence order, and the bump table | `versioning`, `release` |
+| [`gitignore-patterns.md`](skills/docs/gitignore-patterns.md) | What should never be committed, by category | `init`, `commit` |
 
 ## Development
 
@@ -230,7 +234,7 @@ bottom of the file discovers it — there is nothing to register.
 
 - Run `./tests/run-tests.sh` before proposing a change; a change to a skill's
   frontmatter or `## Context` block is exactly what the suite exists to catch.
-- Commit with [Conventional Commits](references/conventional-commits-1.0.0.md) —
+- Commit with [Conventional Commits](skills/docs/conventional-commits-1.0.0.md) —
   the plugin is used on itself, so `/git-tools:commit` is the intended path.
 - Log user-visible changes under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md).
 - Cut releases with `/git-tools:release`. The version lives in

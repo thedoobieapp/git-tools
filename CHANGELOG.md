@@ -10,6 +10,25 @@ Versions here are the plugin's own, as recorded in
 
 ## [Unreleased]
 
+### Added
+
+- A seventh skill, `docs`, in the reference directory itself. Its job is to make
+  that directory install with the plugin the way a skill does; asked for
+  directly, it lists the documents beside it and reads the one wanted. It never
+  edits a reference and never does the work a spec describes.
+
+### Changed
+
+- Reference material moved from `references/` at the plugin root to
+  `skills/docs/`, so everything a skill reads at run time now lives under
+  one directory. Skills read the files as
+  `${CLAUDE_PLUGIN_ROOT}/skills/docs/<file>.md` and link to them as
+  `../docs/<file>.md`.
+- The test that proves no reference is dead weight now searches only the
+  `SKILL.md` files rather than the whole skills directory. The references sit
+  under that directory and cross-link each other, so the wider search would
+  have found every file named by a sibling and passed on its own footprints.
+
 ## [0.4.0] - 2026-08-15
 
 ### Changed

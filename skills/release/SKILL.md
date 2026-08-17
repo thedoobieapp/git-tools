@@ -50,7 +50,7 @@ commit to release.
 
 ### Step 2 — Determine the version
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/version-sources.md`.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/docs/version-sources.md`.
 
 1. Detect the current version and **every** file that carries it — the first match
    is authoritative, but all of them get updated.
@@ -63,8 +63,8 @@ Hold the result: current version, new version, bump type, one-line reasoning
 
 ### Step 3 — Draft the changelog section
 
-Read `${CLAUDE_PLUGIN_ROOT}/references/commit-type-mapping.md`
-and `${CLAUDE_PLUGIN_ROOT}/references/keep-a-changelog-1.1.0.md`.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/docs/commit-type-mapping.md`
+and `${CLAUDE_PLUGIN_ROOT}/skills/docs/keep-a-changelog-1.1.0.md`.
 
 1. If `CHANGELOG.md` does not exist, create the Keep a Changelog skeleton in memory
    and treat every commit since the repo's first as the release's content.
@@ -165,8 +165,8 @@ done when the tag or commit did not land.
 - Every version-carrying file moves together — a repo with `plugin.json` and
   `marketplace.json` out of sync is a bug this skill must not create
 - Dates are ISO 8601 (`YYYY-MM-DD`), taken from the environment
-- If a `${CLAUDE_PLUGIN_ROOT}/references/…` file cannot be read, find it under the
-  plugin's `references/` directory and read it there. Never guess a bump or a
+- If a `${CLAUDE_PLUGIN_ROOT}/skills/docs/…` file cannot be read, find it under the
+  plugin's `skills/docs/` directory and read it there. Never guess a bump or a
   changelog format because a reference did not load — say what failed and stop
 - NEVER include co-authoring or attribution references in commits
 
@@ -174,6 +174,6 @@ done when the tag or commit did not land.
 
 # Links
 
-- [version-sources](../../references/version-sources.md)
-- [commit-type-mapping](../../references/commit-type-mapping.md)
-- [keep-a-changelog-1.1.0](../../references/keep-a-changelog-1.1.0.md)
+- [version-sources](../docs/version-sources.md)
+- [commit-type-mapping](../docs/commit-type-mapping.md)
+- [keep-a-changelog-1.1.0](../docs/keep-a-changelog-1.1.0.md)

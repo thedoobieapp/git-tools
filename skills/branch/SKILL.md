@@ -17,7 +17,7 @@ model: sonnet
 
 ## Your task
 
-Create a properly named git branch following `${CLAUDE_PLUGIN_ROOT}/references/conventional-branch-1.0.0.md` conventions.
+Create a properly named git branch following `${CLAUDE_PLUGIN_ROOT}/skills/docs/conventional-branch-1.0.0.md` conventions.
 
 ### Step 0 — Confirm there is a repo
 
@@ -100,4 +100,4 @@ Nothing is created until this step returns approval.
 
 # Links
 
-- [conventional-branch-1.0.0](../../references/conventional-branch-1.0.0.md)
+- [conventional-branch-1.0.0](../docs/conventional-branch-1.0.0.md)

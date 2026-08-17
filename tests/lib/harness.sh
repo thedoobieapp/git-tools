@@ -23,7 +23,7 @@ set -uo pipefail
 TESTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PLUGIN_ROOT="$(cd "$TESTS_DIR/.." && pwd)"
 SKILLS_DIR="$PLUGIN_ROOT/skills"
-REFERENCES_DIR="$PLUGIN_ROOT/references"
+REFERENCES_DIR="$PLUGIN_ROOT/skills/docs"
 MANIFEST="$PLUGIN_ROOT/.claude-plugin/plugin.json"
 
 # Every SKILL.md the plugin ships, in a stable order.
