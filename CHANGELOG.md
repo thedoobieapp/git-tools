@@ -10,6 +10,8 @@ Versions here are the plugin's own, as recorded in
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-17
+
 ### Added
 
 - A seventh skill, `docs`, in the reference directory itself. Its job is to make
