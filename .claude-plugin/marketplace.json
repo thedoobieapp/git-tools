@@ -1,0 +1,26 @@
+{
+  "name": "git-tools",
+  "owner": {
+    "name": "The Doobie Crew",
+    "email": "contact@thedoobie.app",
+    "url": "https://github.com/thedoobieapp"
+  },
+  "description": "Git workflow skills: repo initialization, conventional commits, branch naming, Keep a Changelog, Semantic Versioning, and one-pass releases",
+  "plugins": [
+    {
+      "name": "git-tools",
+      "source": "./",
+      "displayName": "Git Tools",
+      "description": "Git workflow skills: repo initialization, conventional commits, branch naming, Keep a Changelog, Semantic Versioning, and one-pass releases",
+      "version": "0.5.0",
+      "author": {
+        "name": "The Doobie Crew",
+        "email": "contact@thedoobie.app"
+      },
+      "homepage": "https://github.com/thedoobieapp/git-tools",
+      "repository": "https://github.com/thedoobieapp/git-tools",
+      "license": "MIT",
+      "keywords": ["git", "init", "commit", "branch", "changelog", "versioning", "release", "semver", "conventional-commits"]
+    }
+  ]
+}

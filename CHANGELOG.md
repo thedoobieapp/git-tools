@@ -10,6 +10,29 @@ Versions here are the plugin's own, as recorded in
 
 ## [Unreleased]
 
+### Added
+
+- `.claude-plugin/marketplace.json` — the repository now publishes itself. Its
+  one entry is sourced from `./`, the repository root, so the plugin and the
+  catalogue listing it are the same directory. Installation is
+  `/plugin marketplace add thedoobieapp/git-tools` followed by
+  `/plugin install git-tools@git-tools`, with no other marketplace to add first.
+- A fifth case file, `15-marketplace.sh`, holding the marketplace manifest to
+  its schema and to the plugin manifest beside it. The pairing matters because
+  the version is now written twice and `plugin.json` wins at install time: an
+  entry left behind at the old number advertises a version nobody receives, and
+  `claude plugin validate` reports that as a warning while still exiting `0`.
+  It also checks the README's install lines against the name the manifest
+  actually declares.
+
+### Changed
+
+- `version-sources` now says where a version lives inside a `marketplace.json`
+  — the `version` of the matching entry in `plugins[]`, not a top-level field —
+  and spells out the consequence of letting the two manifests drift.
+- Installation in the README is the self-hosted marketplace. The
+  `thedoobieapp/skills` route is no longer documented.
+
 ## [0.5.0] - 2026-08-17
 
 ### Added

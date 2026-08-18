@@ -25,6 +25,7 @@ PLUGIN_ROOT="$(cd "$TESTS_DIR/.." && pwd)"
 SKILLS_DIR="$PLUGIN_ROOT/skills"
 REFERENCES_DIR="$PLUGIN_ROOT/skills/docs"
 MANIFEST="$PLUGIN_ROOT/.claude-plugin/plugin.json"
+MARKETPLACE="$PLUGIN_ROOT/.claude-plugin/marketplace.json"
 
 # Every SKILL.md the plugin ships, in a stable order.
 skill_files() {

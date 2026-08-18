@@ -44,11 +44,19 @@ new enough.
 
 ## Installation
 
-From the marketplace, inside Claude Code:
+This repository is its own marketplace — it carries the catalogue that lists it,
+so there is nothing else to add first. Inside Claude Code:
 
 ```
-/plugin marketplace add thedoobieapp/skills
-/plugin install git-tools@the-doobie-app-skills
+/plugin marketplace add thedoobieapp/git-tools
+/plugin install git-tools@git-tools
+```
+
+The repeated name is not a typo: the first is the marketplace, the second the
+one plugin in it. Later versions arrive with:
+
+```
+/plugin marketplace update git-tools
 ```
 
 From a local checkout of this repository, for one session:
@@ -59,6 +67,13 @@ claude --plugin-dir /path/to/git-tools
 
 To load a checkout in every session, place it at `~/.claude/skills/git-tools/`;
 it is picked up on the next start as `git-tools@skills-dir`.
+
+A checkout can also be added as a marketplace directly, which is the closest
+thing to what an installed copy sees:
+
+```
+/plugin marketplace add /path/to/git-tools
+```
 
 ## Usage
 
@@ -104,7 +119,8 @@ of failing when there isn't one.
 ```
 git-tools/
 ├── .claude-plugin/
-│   └── plugin.json                        # Plugin manifest (name, version, metadata)
+│   ├── plugin.json                        # Plugin manifest (name, version, metadata)
+│   └── marketplace.json                   # Marketplace catalogue — one entry, sourced from ./
 ├── skills/
 │   ├── init/SKILL.md                      # One directory per skill
 │   ├── commit/SKILL.md
@@ -126,6 +142,7 @@ git-tools/
 │   ├── lib/harness.sh                     # desc/assert vocabulary, per-test temp dirs
 │   └── cases/                             # One file per area, run in name order
 │       ├── 10-manifest.sh
+│       ├── 15-marketplace.sh
 │       ├── 20-skill-frontmatter.sh
 │       ├── 30-skill-context.sh
 │       └── 40-self-contained.sh
@@ -163,11 +180,15 @@ files as `${CLAUDE_PLUGIN_ROOT}/skills/docs/<file>.md` and link to them as
 
 Edit a `SKILL.md` and reload the plugin — there is nothing to build.
 
-Validate the manifest and the skills:
+Validate the manifests and the skills:
 
 ```bash
 claude plugin validate .
 ```
+
+Pointed at this directory the CLI validates `marketplace.json` and descends
+into the entry's `plugin.json`, since the entry's source is the repository
+root. It warns rather than fails when the two versions disagree.
 
 Try a change before shipping it:
 
@@ -187,6 +208,13 @@ now held down by a test — read the test before working around it:
   the parse fails silently and the skill loses every frontmatter field,
   including its own trigger description. See `0.2.1`; guarded by
   [`20-skill-frontmatter.sh`](tests/cases/20-skill-frontmatter.sh).
+- **The version is written twice.** This repository is its own marketplace, so
+  `.claude-plugin/plugin.json` and the entry in `.claude-plugin/marketplace.json`
+  both carry the version. `plugin.json` wins at install time and the entry is
+  ignored, so a release that bumps one and not the other publishes a catalogue
+  advertising a version nobody receives. `claude plugin validate` reports it as
+  a *warning* and still exits `0`; guarded by
+  [`15-marketplace.sh`](tests/cases/15-marketplace.sh).
 
 ### Tests
 
@@ -203,13 +231,14 @@ against the copy.
 VERBOSE=1 ./tests/run-tests.sh     # also print what each passing test established
 ```
 
-The run exits 0 only if every test passed. **29 tests across 4 case files, all
-green** as of `0.4.0`.
+The run exits 0 only if every test passed. **39 tests across 5 case files, all
+green** as of `0.5.0`.
 
 | Case file | Tests | What it holds the plugin to |
 |---|---|---|
 | [`10-manifest.sh`](tests/cases/10-manifest.sh) | 8 | `plugin.json` parses, sits at `.claude-plugin/`, names the plugin `git-tools`, carries description, author, license and keywords, and a version that is a SemVer number; `CHANGELOG.md` opens as Keep a Changelog, keeps an `Unreleased` section, and its latest release is the version the manifest declares; `claude plugin validate` passes |
-| [`20-skill-frontmatter.sh`](tests/cases/20-skill-frontmatter.sh) | 7 | Every `SKILL.md` opens with a `---` block, its frontmatter `name` is its directory name, it declares a `description`, `allowed-tools` and a `model`, every git subcommand it runs at load time is in `allowed-tools`, and no unquoted value contains `': '`; the plugin ships exactly six skills |
+| [`15-marketplace.sh`](tests/cases/15-marketplace.sh) | 10 | `marketplace.json` parses, sits at `.claude-plugin/`, is named `git-tools`, avoids the names Anthropic reserves, and declares an owner; its one entry is sourced from the repository root, agrees with `plugin.json` on name, version and license, and carries what a `/plugin` listing shows; the README's install lines name the marketplace the manifest actually declares; `claude plugin validate` passes with no warnings |
+| [`20-skill-frontmatter.sh`](tests/cases/20-skill-frontmatter.sh) | 7 | Every `SKILL.md` opens with a `---` block, its frontmatter `name` is its directory name, it declares a `description`, `allowed-tools` and a `model`, every git subcommand it runs at load time is in `allowed-tools`, and no unquoted value contains `': '`; the plugin ships exactly seven skills |
 | [`30-skill-context.sh`](tests/cases/30-skill-context.sh) | 7 | Every `## Context` command in every skill exits 0 in five project states — outside a repo, a repo with no commits, one with commits but no tags, one with commits, a tag and a dirty tree, and a detached HEAD. Plus two guards: the count of context commands, and the set of them that would break under `pipefail` |
 | [`40-self-contained.sh`](tests/cases/40-self-contained.sh) | 7 | Every link and `${CLAUDE_PLUGIN_ROOT}` path resolves and stays inside the plugin; references and skills pair up both ways; no skill or reference names a sibling plugin or a marketplace path; every shell file parses as bash and avoids bash 4 and GNU-only constructs; the plugin — and the suite itself — still work from a standalone copy |
 
@@ -238,9 +267,10 @@ bottom of the file discovers it — there is nothing to register.
   the plugin is used on itself, so `/git-tools:commit` is the intended path.
 - Log user-visible changes under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md).
 - Cut releases with `/git-tools:release`. The version lives in
-  [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json), and the marketplace
-  entry in the monorepo must be moved with it — a `plugin.json` and a
-  `marketplace.json` out of sync is a bug.
+  [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json), and the entry in
+  [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) beside it
+  must be moved with it — a `plugin.json` and a `marketplace.json` out of sync
+  is a bug, and only a warning from the CLI.
 
 ## Changelog
 
