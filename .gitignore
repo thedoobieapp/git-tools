@@ -9,7 +9,6 @@
 skills-lock.json
 .social-media/
 CLAUDE.md
-.tests/
 
 # git-tools: licensing refresh leftovers (references/ itself is tracked)
 skills/licensing/references-*/

@@ -1,0 +1,4 @@
+# Backlog
+
+- [ ] Add a merge skill that confirms the merge type, origin and target branches, check if there's code to commit or stash
+- [ ] Setup skill that runs from zero to first git commit pushed to a remote and it's devired skills
