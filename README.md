@@ -1,19 +1,21 @@
 # Git Tools
 
 A [Claude Code plugin](https://code.claude.com/docs/en/plugins.md) covering the
-everyday git workflow — putting a project under version control, committing,
-branching, keeping a changelog, versioning and cutting releases.
+everyday git workflow — putting a project under version control, licensing it,
+committing, branching, keeping a changelog, versioning and cutting releases.
 
-Each skill is grounded in a published spec rather than in house habit:
+Each skill is grounded in a published text rather than in house habit:
 [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/),
 [Conventional Branch 1.0.0](https://conventional-branch.github.io/),
-[Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) and
-[Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html). The specs live
-once in [skills/docs/](skills/docs/), so no two skills can drift
-apart on what a `feat` commit means or where a version number is kept.
+[Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/),
+[Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) and the
+[choosealicense.com](https://choosealicense.com/) licence catalogue. Each spec
+sits in a `references/` folder beside the `SKILL.md` that reads it, and a skill
+needing one it doesn't own reads it from the folder that does — so no two skills
+can drift apart on what a `feat` commit means or where a version number is kept.
 
-Every decision that is the user's to make — the branch type, where a new repo
-gets pushed, what lands in a commit, the version bump, whether a tag gets
+Every decision that is the user's to make — the branch type, which licence a
+project carries, what lands in a commit, the version bump, whether a tag gets
 pushed — goes through a multiple choice question, never a silent guess and
 never a typed reply in prose.
 
@@ -21,11 +23,12 @@ never a typed reply in prose.
 
 | Skill | What it does | Follows |
 |---|---|---|
-| [`init`](skills/init/SKILL.md) | Reports whether the project root is already a repo, is nested inside a parent one, or is untracked. For an untracked root: asks everything in one question before anything is created — the base branch, the remote URL, which of the editor and tool folders actually present (`.vscode/`, `.idea/`, `.zed/`, `.fleet/`, `.claude/`, a `pm` docs root) git should ignore, and whether to write the `.gitignore` — then runs `git init`, wires up `origin` when a URL was given, and drafts the file, printing it in full in the closing report. The remote is optional and never guessed, an unreachable URL is a warning rather than a refusal, and an `origin` that already exists is left alone. An existing `.gitignore` is appended to, never redrafted | [gitignore-patterns](skills/docs/gitignore-patterns.md) |
-| [`commit`](skills/commit/SKILL.md) | Screens the files about to enter the commit for secrets, dependency directories, build output and OS cruft; groups the working set into the fewest commits that pass the "together test"; drafts a conventional message per group and confirms each one before it lands | [Conventional Commits 1.0.0](skills/docs/conventional-commits-1.0.0.md) |
-| [`branch`](skills/branch/SKILL.md) | Picks the prefix (`feat/`, `fix/`, `hotfix/`, `release/`, `chore/`), validates the name against the spec, and creates and switches to the branch | [Conventional Branch 1.0.0](skills/docs/conventional-branch-1.0.0.md) |
-| [`changelog`](skills/changelog/SKILL.md) | Creates a `CHANGELOG.md`, adds entries to `## [Unreleased]`, or promotes that section into a versioned one. Entries are written for humans, not copied from commit subjects | [Keep a Changelog 1.1.0](skills/docs/keep-a-changelog-1.1.0.md) |
-| [`versioning`](skills/versioning/SKILL.md) | Detects the current version and every file carrying it, derives the bump from the conventional commits since the last tag, updates all of them together, and tags | [Semantic Versioning 2.0.0](skills/docs/semantic-versioning-2.0.0.md) |
+| [`init`](skills/init/SKILL.md) | Reports whether the project root is already a repo, is nested inside a parent one, or is untracked. For an untracked root it asks twice and never more. First, four questions in one call: the base branch, then `.gitignore`, `README.md` and `LICENSE` — one each, existing files first. A file that is there offers leave it as it is / amend it with what the template has and it lacks / delete and recreate it from the template / delete it; a file that is not offers create it from the template adapted to this project (only when there is a project to adapt to) / create it from the template / skip it. Then, after `git init`, the two things a template cannot answer: which of the editor and tool folders present (`.vscode/`, `.idea/`, `.zed/`, `.fleet/`, `.claude/`, a `pm` docs root) git should ignore, and which licence — handed to `licensing`, which writes the text. Local only: no remote is created, checked or wired up. Existing content is never rewritten without being asked for, the README invents nothing, and a licence is verbatim or not written at all. Every file is printed in the closing report | [gitignore-patterns](skills/commit/references/gitignore-patterns.md), [templates](skills/init/templates/) |
+| [`licensing`](skills/licensing/SKILL.md) | Copies a licence into a project, explains what one permits, requires and limits, compares two, or picks one by asking what the project needs. Every answer comes off the plugin's own verbatim snapshot of the choosealicense.com catalogue and the awk scripts that query it — a `LICENSE` is never written from memory, and the copyright placeholders are filled from git config rather than guessed | [licence catalogue](skills/licensing/references/) |
+| [`commit`](skills/commit/SKILL.md) | Screens the files about to enter the commit for secrets, dependency directories, build output and OS cruft; groups the working set into the fewest commits that pass the "together test"; drafts a conventional message per group and confirms each one before it lands | [Conventional Commits 1.0.0](skills/commit/references/conventional-commits-1.0.0.md) |
+| [`branch`](skills/branch/SKILL.md) | Picks the prefix (`feat/`, `fix/`, `hotfix/`, `release/`, `chore/`), validates the name against the spec, and creates and switches to the branch | [Conventional Branch 1.0.0](skills/branch/references/conventional-branch-1.0.0.md) |
+| [`changelog`](skills/changelog/SKILL.md) | Creates a `CHANGELOG.md`, adds entries to `## [Unreleased]`, or promotes that section into a versioned one. Entries are written for humans, not copied from commit subjects | [Keep a Changelog 1.1.0](skills/changelog/references/keep-a-changelog-1.1.0.md) |
+| [`versioning`](skills/versioning/SKILL.md) | Detects the current version and every file carrying it, derives the bump from the conventional commits since the last tag, updates all of them together, and tags | [Semantic Versioning 2.0.0](skills/versioning/references/semantic-versioning-2.0.0.md) |
 | [`release`](skills/release/SKILL.md) | The whole sequence in one pass: bump, changelog promotion, every version file updated, one `chore: release X.Y.Z` commit and one annotated tag — behind a single confirmation. Pushes only when explicitly asked; local-only is the default | all of the above |
 
 `versioning` and `changelog` remain useful on their own — bumping a version
@@ -38,9 +41,10 @@ produces one commit instead of a split one.
 - [Claude Code](https://code.claude.com/docs/en/overview.md) with plugin support
 - `git` on `PATH`
 
-No runtime, no dependencies to install: the plugin is Markdown. Running the
-test suite needs nothing more — bash and `git`, and the bash macOS ships is
-new enough.
+No runtime, no dependencies to install: the plugin is Markdown, plus a few awk
+scripts for the work that has to come out the same way twice. `awk` is POSIX
+and already on any machine with `git` on it. Running the test suite needs
+nothing more — bash and `git`, and the bash macOS ships is new enough.
 
 ## Installation
 
@@ -82,6 +86,7 @@ people actually use:
 
 ```
 set up git here
+which licence fits this project?
 commit my changes
 start working on OAuth login
 what changed since the last release?
@@ -93,6 +98,7 @@ Or invoke a skill directly:
 
 ```
 /git-tools:init
+/git-tools:licensing
 /git-tools:commit
 /git-tools:branch
 /git-tools:changelog
@@ -121,22 +127,47 @@ git-tools/
 ├── .claude-plugin/
 │   ├── plugin.json                        # Plugin manifest (name, version, metadata)
 │   └── marketplace.json                   # Marketplace catalogue — one entry, sourced from ./
-├── skills/
-│   ├── init/SKILL.md                      # One directory per skill
-│   ├── commit/SKILL.md
-│   ├── branch/SKILL.md
-│   ├── changelog/SKILL.md
-│   ├── versioning/SKILL.md
-│   ├── release/SKILL.md
-│   └── docs/                              # Specs and tables, shared by every skill
-│       ├── SKILL.md                       # Lists and reads the files beside it
-│       ├── commit-type-mapping.md
-│       ├── conventional-branch-1.0.0.md
-│       ├── conventional-commits-1.0.0.md
-│       ├── gitignore-patterns.md
-│       ├── keep-a-changelog-1.1.0.md
-│       ├── semantic-versioning-2.0.0.md
-│       └── version-sources.md
+├── skills/                                # One directory per skill
+│   ├── init/
+│   │   ├── SKILL.md
+│   │   └── templates/                     # Starter files the skill writes as-is
+│   │       ├── gitignore.template
+│   │       └── README.template.md
+│   ├── licensing/
+│   │   ├── SKILL.md
+│   │   ├── references/                    # choosealicense.com snapshot, verbatim
+│   │   │   ├── SOURCE.md                  # Upstream commit the snapshot came from
+│   │   │   ├── UPSTREAM-LICENSE
+│   │   │   ├── rules.yml                  # Tag dictionary the texts are described by
+│   │   │   └── … 47 licence texts (mit.txt, apache-2.0.txt, gpl-3.0.txt, …)
+│   │   └── scripts/                       # awk, one per question the skill asks
+│   │       ├── resolve.awk                # Free-text name → ranked tiers
+│   │       ├── filter.awk                 # Narrow a shortlist, count what still splits it
+│   │       ├── explain.awk / compare.awk  # Tag → meaning, one licence or two
+│   │       ├── holders.awk                # What the text leaves for the user to fill
+│   │       ├── write.awk / fill.awk       # Write via a temporary, moved only on exit 0
+│   │       ├── index.awk / shape.awk
+│   │       └── refresh-references.sh      # Replace the snapshot wholesale
+│   ├── commit/
+│   │   ├── SKILL.md
+│   │   ├── references/
+│   │   │   ├── conventional-commits-1.0.0.md
+│   │   │   └── gitignore-patterns.md
+│   │   └── scripts/screen.awk             # What must not enter a commit
+│   ├── branch/
+│   │   ├── SKILL.md
+│   │   └── references/conventional-branch-1.0.0.md
+│   ├── changelog/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── keep-a-changelog-1.1.0.md
+│   │       └── commit-type-mapping.md
+│   ├── versioning/
+│   │   ├── SKILL.md
+│   │   └── references/
+│   │       ├── semantic-versioning-2.0.0.md
+│   │       └── version-sources.md
+│   └── release/SKILL.md                   # Owns no reference; reads three across
 ├── tests/                                 # The plugin's own suite — see Development
 │   ├── run-tests.sh
 │   ├── lib/harness.sh                     # desc/assert vocabulary, per-test temp dirs
@@ -158,23 +189,38 @@ git subcommands that skill actually needs.
 
 ## References
 
-Reference material lives once in `skills/docs/` rather than once per
-skill, so several skills cite the same copy of a spec without the copies
-drifting. The directory carries a small `SKILL.md` of its own, which is what
-makes it install alongside the skills rather than be left behind; that skill
-only lists the documents beside it and reads the one asked for. Skills read the
-files as `${CLAUDE_PLUGIN_ROOT}/skills/docs/<file>.md` and link to them as
-`../docs/<file>.md`.
+Each reference sits in a `references/` folder beside the `SKILL.md` that reads
+it, so a skill's own directory is everything it needs and installs as one piece.
+A spec still lives once: a skill that reads one it does not own reads it from
+the folder that does, as
+`${CLAUDE_PLUGIN_ROOT}/skills/<owner>/references/<file>.md`, linking to it as
+`../<owner>/references/<file>.md`. `release` owns none and reads three across —
+which its Rules section names, so a reference that fails to load points at the
+folder that has it.
 
-| File | Contents | Read by |
-|---|---|---|
-| [`conventional-commits-1.0.0.md`](skills/docs/conventional-commits-1.0.0.md) | The commit message spec | `commit` |
-| [`conventional-branch-1.0.0.md`](skills/docs/conventional-branch-1.0.0.md) | The branch naming spec | `branch` |
-| [`keep-a-changelog-1.1.0.md`](skills/docs/keep-a-changelog-1.1.0.md) | The changelog format | `changelog`, `release` |
-| [`semantic-versioning-2.0.0.md`](skills/docs/semantic-versioning-2.0.0.md) | The versioning spec | `versioning` |
-| [`commit-type-mapping.md`](skills/docs/commit-type-mapping.md) | Which commit type becomes which changelog category | `changelog`, `release` |
-| [`version-sources.md`](skills/docs/version-sources.md) | Where a version lives (`package.json`, `Cargo.toml`, `pyproject.toml`, `VERSION`, git tags, plugin and marketplace manifests), in precedence order, and the bump table | `versioning`, `release` |
-| [`gitignore-patterns.md`](skills/docs/gitignore-patterns.md) | What should never be committed, by category | `init`, `commit` |
+| File | Contents | Owned by | Also read by |
+|---|---|---|---|
+| [`conventional-commits-1.0.0.md`](skills/commit/references/conventional-commits-1.0.0.md) | The commit message spec | `commit` | — |
+| [`gitignore-patterns.md`](skills/commit/references/gitignore-patterns.md) | What should never be committed, by category | `commit` | `init` |
+| [`conventional-branch-1.0.0.md`](skills/branch/references/conventional-branch-1.0.0.md) | The branch naming spec | `branch` | — |
+| [`keep-a-changelog-1.1.0.md`](skills/changelog/references/keep-a-changelog-1.1.0.md) | The changelog format | `changelog` | `release` |
+| [`commit-type-mapping.md`](skills/changelog/references/commit-type-mapping.md) | Which commit type becomes which changelog category | `changelog` | `release` |
+| [`semantic-versioning-2.0.0.md`](skills/versioning/references/semantic-versioning-2.0.0.md) | The versioning spec | `versioning` | — |
+| [`version-sources.md`](skills/versioning/references/version-sources.md) | Where a version lives (`package.json`, `Cargo.toml`, `pyproject.toml`, `VERSION`, git tags, plugin and marketplace manifests), in precedence order, and the bump table | `versioning` | `release` |
+| [`references/`](skills/licensing/references/) | A verbatim snapshot of the choosealicense.com catalogue — 47 licence texts, the `rules.yml` tag dictionary, and a `SOURCE.md` naming the upstream commit | `licensing` | `init` |
+
+The licence catalogue is a snapshot rather than a hand-kept list, and
+[`refresh-references.sh`](skills/licensing/scripts/refresh-references.sh)
+replaces it wholesale rather than patching it — a `LICENSE` is a legal
+instrument whose force is in its exact words, so no part of it is ever
+paraphrased or written from memory.
+
+`init` also ships two starter files of its own in
+[`skills/init/templates/`](skills/init/templates/) — a stack-agnostic
+`.gitignore` and a README skeleton. They are not references: a skill *reads* a
+reference to decide something, and *writes* a template, unchanged, when the user
+asks for one. There is no `LICENSE` template, because the licence text comes
+from `licensing`'s catalogue instead.
 
 ## Development
 
@@ -187,7 +233,7 @@ claude plugin validate .
 ```
 
 Pointed at this directory the CLI validates `marketplace.json` and descends
-into the entry's `plugin.json`, since the entry's source is the repository
+into the entry's [.claude-plugin/plugin.json](.claude-plugin/plugin.json), since the entry's source is the repository
 root. It warns rather than fails when the two versions disagree.
 
 Try a change before shipping it:
@@ -196,13 +242,17 @@ Try a change before shipping it:
 claude --plugin-dir .
 ```
 
-Two constraints worth knowing before editing. Both were real bugs, and both are
+Three constraints worth knowing before editing. All were real bugs, and all are
 now held down by a test — read the test before working around it:
 
 - **`## Context` commands run at load time**, and a non-zero exit aborts the
-  whole skill. Every git command in a context block needs a fallback
-  (`|| echo "(no repo)"`), or the skill breaks in a directory that isn't a repo
-  yet. See `0.2.0` in the [changelog](CHANGELOG.md); guarded by
+  whole skill. Guarding the exit is not enough on its own: several git commands
+  succeed and print nothing — `branch --show-current` on a detached HEAD,
+  `tag` in a repo with none — so a fallback keyed on failure alone shows a blank
+  line. Every context line runs as
+  `out=$(…) || true; echo "${out:-(marker)}"`, with a marker naming the state it
+  actually found. See `0.2.0` and the `Unreleased` fix in the
+  [changelog](CHANGELOG.md); guarded by
   [`30-skill-context.sh`](tests/cases/30-skill-context.sh).
 - **Frontmatter is YAML.** A `description` containing `: ` must be quoted, or
   the parse fails silently and the skill loses every frontmatter field,
@@ -232,7 +282,7 @@ VERBOSE=1 ./tests/run-tests.sh     # also print what each passing test establish
 ```
 
 The run exits 0 only if every test passed. **39 tests across 5 case files, all
-green** as of `0.5.0`.
+green** as of the current `Unreleased` work.
 
 | Case file | Tests | What it holds the plugin to |
 |---|---|---|
@@ -263,7 +313,7 @@ bottom of the file discovers it — there is nothing to register.
 
 - Run `./tests/run-tests.sh` before proposing a change; a change to a skill's
   frontmatter or `## Context` block is exactly what the suite exists to catch.
-- Commit with [Conventional Commits](skills/docs/conventional-commits-1.0.0.md) —
+- Commit with [Conventional Commits](skills/commit/references/conventional-commits-1.0.0.md) —
   the plugin is used on itself, so `/git-tools:commit` is the intended path.
 - Log user-visible changes under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md).
 - Cut releases with `/git-tools:release`. The version lives in

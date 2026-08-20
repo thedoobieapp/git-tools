@@ -22,7 +22,7 @@ People do. Whether consumers or developers, the end users of software are human 
 - Versions and sections should be linkable.
 - The latest version comes first.
 - The release date of each version is displayed.
-- Mention whether you follow [Semantic Versioning](semantic-versioning-2.0.0.md).
+- Mention whether you follow [Semantic Versioning](../../versioning/references/semantic-versioning-2.0.0.md).
 
 ### Types of changes
 
@@ -94,6 +94,6 @@ It's also possible you may discover that you forgot to address a breaking change
 
 ## Related Specifications
 
-- [Semantic Versioning 2.0.0](semantic-versioning-2.0.0.md) - Version numbering system that changelogs should reference
-- [Conventional Commits 1.0.0](conventional-commits-1.0.0.md) - Commit convention that enables automated changelog generation
-- [Conventional Branch 1.0.0](conventional-branch-1.0.0.md) - Branch naming that complements changelog workflow
+- [Semantic Versioning 2.0.0](../../versioning/references/semantic-versioning-2.0.0.md) - Version numbering system that changelogs should reference
+- [Conventional Commits 1.0.0](../../commit/references/conventional-commits-1.0.0.md) - Commit convention that enables automated changelog generation
+- [Conventional Branch 1.0.0](../../branch/references/conventional-branch-1.0.0.md) - Branch naming that complements changelog workflow

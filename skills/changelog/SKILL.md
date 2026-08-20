@@ -9,14 +9,14 @@ model: sonnet
 
 ## Context
 
-- Repo check (`(no repo)` means this directory is not under git): !`git rev-parse --show-toplevel 2>/dev/null || echo "(no repo)"`
-- Current branch: !`git branch --show-current 2>/dev/null || echo "(no repo)"`
-- Latest tags: !`git tag --sort=-version:refname 2>/dev/null | head -5`
-- Git status: !`git status --short 2>/dev/null || echo "(no repo)"`
+- Repo check (`(no repo)` means this directory is not under git): !`out=$(git rev-parse --show-toplevel 2>/dev/null) || true; echo "${out:-(no repo)}"`
+- Current branch: !`out=$(git branch --show-current 2>/dev/null) || true; echo "${out:-(no branch — detached HEAD, or no repo)}"`
+- Latest tags: !`out=$(git tag --sort=-version:refname 2>/dev/null | head -5) || true; echo "${out:-(no tags yet)}"`
+- Git status: !`out=$(git status --short 2>/dev/null) || true; echo "${out:-(working tree clean)}"`
 
 ## Your task
 
-Maintain CHANGELOG.md following `${CLAUDE_PLUGIN_ROOT}/skills/docs/keep-a-changelog-1.1.0.md` conventions.
+Maintain CHANGELOG.md following `${CLAUDE_PLUGIN_ROOT}/skills/changelog/references/keep-a-changelog-1.1.0.md` conventions.
 
 ### Step 0 — Confirm there is a repo
 
@@ -57,7 +57,7 @@ since the repo's first commit, or a range the user names.
 
 Group changes into the six standard categories, mapping conventional commit types
 with the table in
-`${CLAUDE_PLUGIN_ROOT}/skills/docs/commit-type-mapping.md`.
+`${CLAUDE_PLUGIN_ROOT}/skills/changelog/references/commit-type-mapping.md`.
 
 Write entries as human-readable descriptions — not raw commit messages. Each entry should explain what changed from a user's perspective.
 
@@ -128,9 +128,27 @@ Add entries under `## [Unreleased]`, creating category subsections as needed. Pr
 - Always keep an `[Unreleased]` section at the top
 - Entries are for humans — translate commit messages into clear, user-facing descriptions
 - Only include categories that have entries (don't add empty sections)
+- Any git command you run during the task must be written so a non-zero exit
+  cannot abort the step. Use `out=$(<command> 2>/dev/null) || true; echo "${out:-(marker)}"`,
+  the same form the context block uses. Several git commands report an ordinary,
+  expected answer through a non-zero status — `check-ignore` exits `1` for "not
+  ignored", `config --get` exits `1` for "unset", `config --unset` exits `5` for
+  "was not set", `rev-parse HEAD` exits `128` on a repo with no commits — and an
+  unguarded one of those reads as a crash and stops work that should have
+  continued
+- Do not re-run a context command just to confirm what is already printed above.
+  Do re-check when its output contradicts itself or carries a shell error — a
+  wrong answer is worth verifying — but re-run it in the guarded form, never
+  bare, or the check fails the same way the original did
+- Never put an unquoted glob (`README*`, `*.md`) in a command. Shells disagree
+  about an unmatched one: bash and `sh` pass it through literally, zsh aborts the
+  whole command before it runs and prints `no matches found` — which no `2>/dev/null`
+  can suppress, because the shell emits it during expansion rather than the
+  command emitting it. The result is a confident wrong answer. List the directory
+  and filter it instead: `ls -A | grep -iE "^(readme|license)"`
 
 ---
 # Links
 
-- [keep-a-changelog-1.1.0](../docs/keep-a-changelog-1.1.0.md)
-- [commit-type-mapping](../docs/commit-type-mapping.md)
+- [keep-a-changelog-1.1.0](references/keep-a-changelog-1.1.0.md)
+- [commit-type-mapping](references/commit-type-mapping.md)

@@ -104,8 +104,8 @@ The key words “MUST”, “MUST NOT”, “REQUIRED”, “SHALL”, “SHALL 
 
 ## Why Use Conventional Commits
 
-- Automatically generating CHANGELOGs (see [Keep a Changelog 1.1.0](keep-a-changelog-1.1.0.md)).
-- Automatically determining a semantic version bump (based on the types of commits landed, see [Semantic Versioning 2.0.0](semantic-versioning-2.0.0.md)).
+- Automatically generating CHANGELOGs (see [Keep a Changelog 1.1.0](../../changelog/references/keep-a-changelog-1.1.0.md)).
+- Automatically determining a semantic version bump (based on the types of commits landed, see [Semantic Versioning 2.0.0](../../versioning/references/semantic-versioning-2.0.0.md)).
 - Communicating the nature of changes to teammates, the public, and other stakeholders.
 - Triggering build and publish processes.
 - Making it easier for people to contribute to your projects, by allowing them to explore a more structured commit history.
@@ -170,6 +170,6 @@ Refs: 676104e, a215868
 
 ## Related Specifications
 
-- [Semantic Versioning 2.0.0](semantic-versioning-2.0.0.md) - Commit types map directly to SemVer version bumps
-- [Keep a Changelog 1.1.0](keep-a-changelog-1.1.0.md) - Conventional commits enable automated changelog generation
-- [Conventional Branch 1.0.0](conventional-branch-1.0.0.md) - Branch naming convention that aligns with commit types
+- [Semantic Versioning 2.0.0](../../versioning/references/semantic-versioning-2.0.0.md) - Commit types map directly to SemVer version bumps
+- [Keep a Changelog 1.1.0](../../changelog/references/keep-a-changelog-1.1.0.md) - Conventional commits enable automated changelog generation
+- [Conventional Branch 1.0.0](../../branch/references/conventional-branch-1.0.0.md) - Branch naming convention that aligns with commit types

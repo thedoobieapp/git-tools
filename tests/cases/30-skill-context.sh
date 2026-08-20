@@ -70,16 +70,20 @@ test_the_context_command_count_is_unchanged() {
   for s in $(skill_files); do
     n=$((n + $(context_commands "$s" | grep -c .)))
   done
-  assert_eq "$n" "35" "35 context commands across the six git-tools skills"
+  assert_eq "$n" "43" "43 context commands across the seven git-tools skills"
 }
 
 test_pipefail_fragile_commands_are_known() {
   desc "the set of context commands that would fail under pipefail is unchanged"
-  # Four commands end in `| head` with no `|| echo` fallback. They exit 0
-  # outside a repo only because a pipeline reports its last command's status.
-  # If the skill harness ever ran context blocks with `set -o pipefail`, those
-  # four would abort their skills. Nothing suggests it does — this test exists
-  # so the number cannot creep up unnoticed, not because it is a bug today.
+  # The set is empty, and this test is what keeps it that way.
+  #
+  # It was four. Those commands ended in `| head` with no fallback, and exited 0
+  # outside a repo only because a pipeline reports its last command's status —
+  # so `set -o pipefail` in the skill harness would have aborted their skills.
+  # The rewrite that gave every context line the
+  # `out=$(…) || true; echo "${out:-(marker)}"` form settled it as a side
+  # effect: the `|| true` swallows the pipeline's status whatever pipefail says.
+  # A new command written the old way would show up here as a 1.
   fragile=""
   count=0
   for s in $(skill_files); do
@@ -94,11 +98,11 @@ test_pipefail_fragile_commands_are_known() {
 $(context_commands "$s")
 EOF
   done
-  assert_eq "$count" "4" \
-    "exactly four commands depend on pipeline status: 'git tag … | head -5' in changelog, versioning and release, plus 'git status -sb | head -1' in release"
+  assert_eq "$count" "0" \
+    "no context command depends on its pipeline's exit status"
   assert_eq "$(printf '%s' "$fragile" | tr ' ' '\n' | sort -u | tr '\n' ' ')" \
-    "changelog release versioning " \
-    "and they live in the three skills that read tags"
+    "" \
+    "so no skill would lose its context block under set -o pipefail"
 }
 
 run_cases

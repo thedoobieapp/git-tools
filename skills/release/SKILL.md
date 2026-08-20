@@ -9,12 +9,12 @@ model: sonnet
 
 ## Context
 
-- Repo check (`(no repo)` means this directory is not under git): !`git rev-parse --show-toplevel 2>/dev/null || echo "(no repo)"`
-- Current branch: !`git branch --show-current 2>/dev/null || echo "(no repo)"`
-- Latest tags: !`git tag --sort=-version:refname 2>/dev/null | head -5`
-- Commits since last tag: !`git log $(git describe --tags --abbrev=0 2>/dev/null)..HEAD --oneline --no-merges 2>/dev/null || git log --oneline -20 2>/dev/null || echo "(no commits yet)"`
-- Git status: !`git status --short 2>/dev/null || echo "(no repo)"`
-- Remote tracking: !`git status -sb 2>/dev/null | head -1`
+- Repo check (`(no repo)` means this directory is not under git): !`out=$(git rev-parse --show-toplevel 2>/dev/null) || true; echo "${out:-(no repo)}"`
+- Current branch: !`out=$(git branch --show-current 2>/dev/null) || true; echo "${out:-(no branch — detached HEAD, or no repo)}"`
+- Latest tags: !`out=$(git tag --sort=-version:refname 2>/dev/null | head -5) || true; echo "${out:-(no tags yet)}"`
+- Commits since last tag: !`out=$(git log $(git describe --tags --abbrev=0 2>/dev/null)..HEAD --oneline --no-merges 2>/dev/null || git log --oneline -20 2>/dev/null) || true; echo "${out:-(no commits yet)}"`
+- Git status: !`out=$(git status --short 2>/dev/null) || true; echo "${out:-(working tree clean)}"`
+- Remote tracking: !`out=$(git status -sb 2>/dev/null | head -1) || true; echo "${out:-(no repo)}"`
 
 ## Your task
 
@@ -50,7 +50,7 @@ commit to release.
 
 ### Step 2 — Determine the version
 
-Read `${CLAUDE_PLUGIN_ROOT}/skills/docs/version-sources.md`.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/versioning/references/version-sources.md`.
 
 1. Detect the current version and **every** file that carries it — the first match
    is authoritative, but all of them get updated.
@@ -63,8 +63,8 @@ Hold the result: current version, new version, bump type, one-line reasoning
 
 ### Step 3 — Draft the changelog section
 
-Read `${CLAUDE_PLUGIN_ROOT}/skills/docs/commit-type-mapping.md`
-and `${CLAUDE_PLUGIN_ROOT}/skills/docs/keep-a-changelog-1.1.0.md`.
+Read `${CLAUDE_PLUGIN_ROOT}/skills/changelog/references/commit-type-mapping.md`
+and `${CLAUDE_PLUGIN_ROOT}/skills/changelog/references/keep-a-changelog-1.1.0.md`.
 
 1. If `CHANGELOG.md` does not exist, create the Keep a Changelog skeleton in memory
    and treat every commit since the repo's first as the release's content.
@@ -165,15 +165,36 @@ done when the tag or commit did not land.
 - Every version-carrying file moves together — a repo with `plugin.json` and
   `marketplace.json` out of sync is a bug this skill must not create
 - Dates are ISO 8601 (`YYYY-MM-DD`), taken from the environment
-- If a `${CLAUDE_PLUGIN_ROOT}/skills/docs/…` file cannot be read, find it under the
-  plugin's `skills/docs/` directory and read it there. Never guess a bump or a
-  changelog format because a reference did not load — say what failed and stop
+- This skill keeps no reference of its own: `version-sources.md` belongs to
+  `versioning`, `commit-type-mapping.md` and `keep-a-changelog-1.1.0.md` to
+  `changelog`, and it reads all three across. If one cannot be read, look for it
+  in the `references/` folder beside that skill's `SKILL.md`. Never guess a bump
+  or a changelog format because a reference did not load — say what failed and
+  stop
 - NEVER include co-authoring or attribution references in commits
+- Any git command you run during the task must be written so a non-zero exit
+  cannot abort the step. Use `out=$(<command> 2>/dev/null) || true; echo "${out:-(marker)}"`,
+  the same form the context block uses. Several git commands report an ordinary,
+  expected answer through a non-zero status — `check-ignore` exits `1` for "not
+  ignored", `config --get` exits `1` for "unset", `config --unset` exits `5` for
+  "was not set", `rev-parse HEAD` exits `128` on a repo with no commits — and an
+  unguarded one of those reads as a crash and stops work that should have
+  continued
+- Do not re-run a context command just to confirm what is already printed above.
+  Do re-check when its output contradicts itself or carries a shell error — a
+  wrong answer is worth verifying — but re-run it in the guarded form, never
+  bare, or the check fails the same way the original did
+- Never put an unquoted glob (`README*`, `*.md`) in a command. Shells disagree
+  about an unmatched one: bash and `sh` pass it through literally, zsh aborts the
+  whole command before it runs and prints `no matches found` — which no `2>/dev/null`
+  can suppress, because the shell emits it during expansion rather than the
+  command emitting it. The result is a confident wrong answer. List the directory
+  and filter it instead: `ls -A | grep -iE "^(readme|license)"`
 
 ---
 
 # Links
 
-- [version-sources](../docs/version-sources.md)
-- [commit-type-mapping](../docs/commit-type-mapping.md)
-- [keep-a-changelog-1.1.0](../docs/keep-a-changelog-1.1.0.md)
+- [version-sources](../versioning/references/version-sources.md)
+- [commit-type-mapping](../changelog/references/commit-type-mapping.md)
+- [keep-a-changelog-1.1.0](../changelog/references/keep-a-changelog-1.1.0.md)

@@ -10,6 +10,104 @@ Versions here are the plugin's own, as recorded in
 
 ## [Unreleased]
 
+### Added
+
+- A seventh skill, `licensing` — it explains, compares and writes open-source
+  licences from the plugin's own verbatim snapshot of the choosealicense.com
+  catalogue: 47 licence texts plus the `rules.yml` tag dictionary, with a
+  `SOURCE.md` recording the upstream commit and a refresh script that replaces
+  the snapshot wholesale. A `LICENSE` is a legal instrument whose force is in
+  its exact words, so nothing is ever written from memory. Four actions: copy a
+  licence into a project, learn what one permits, requires and limits, compare
+  two, or choose one by answering for what the project needs.
+- Nine awk scripts under `skills/licensing/scripts/` carry the catalogue work
+  the skill used to do inline and judge in prose, where the same request could
+  land differently twice running. `resolve.awk` ranks a free-text name into
+  tiers and reports how many reached the best one, `filter.awk` narrows a
+  shortlist and counts every tag that still splits it, `explain.awk` and
+  `compare.awk` join a tag to its meaning, `holders.awk` finds what a licence
+  leaves open, and `write.awk` and `fill.awk` go through a temporary moved over
+  the target only on exit 0, so a refused run leaves what is on disk alone.
+- `commit` screens the files about to enter a commit with `scripts/screen.awk`
+  rather than prose. It sees every candidate path and knows the file sizes,
+  which reading a list of paths cannot tell you, and `git check-ignore` is no
+  longer needed because `ls-files --exclude-standard` has already dropped what
+  `.gitignore` covers.
+
+### Changed
+
+- Every reference now sits in a `references/` folder beside the `SKILL.md` that
+  reads it. The shared `skills/docs/` directory is gone, and the `docs` skill
+  that existed only to make that directory install with the plugin goes with it
+  — a skill's own folder already installs. `release` keeps none of its own and
+  reads three across: `version-sources` from `versioning`,
+  `commit-type-mapping` and `keep-a-changelog` from `changelog`. Its Rules
+  section says so, so a reference that fails to load points at the right folder
+  rather than at a directory that no longer exists.
+- The test suite followed the references into their new folders. The harness no
+  longer names a shared `skills/docs/`; it finds every `*/references/*.md`
+  instead, and the completeness check now asks that *some* `SKILL.md` names a
+  reference rather than the one sitting beside it, because `release` owns none
+  and reads three across. The skill list swapped `docs` for `licensing`, the
+  context-command count went from 35 to 43, and the set of commands that would
+  break under `pipefail` went from four to none — the `out=$(…) || true` rewrite
+  swallows a pipeline's status whatever `pipefail` says, so that guard now holds
+  the set at empty rather than at four. `CHANGELOG.md` is exempt from the link
+  check: an entry describing a directory that has since been removed names it
+  correctly, and holding a history to today's tree would force every past entry
+  to be rewritten by whoever moves a file next.
+- `init` no longer carries an MIT template of its own. Its License question
+  offers MIT, Apache-2.0 and GPL-3.0 with a one-line gloss each, plus "Show me
+  all of them", and the chosen answer is handed to `licensing` rather than
+  written by `init` itself.
+- `init` now initializes a **local** repository only. The remote question, the
+  `git ls-remote` reachability check, the `git remote add origin`, the
+  unreachable-URL follow-up and the closing `git push -u` hint are all gone,
+  along with the remote lines in the context block and the `git remote` /
+  `git ls-remote` grants in `allowed-tools`. A repo with no remote is reported
+  as finished rather than as half-set-up.
+- `init` now settles all three starter files — `.gitignore`, `README.md` and
+  `LICENSE` — instead of only the `.gitignore`, and asks in two passes instead
+  of one. The first is four questions in a single call: the base branch, then
+  one question per file, the ones already on disk before the ones that are not.
+  A file that exists offers leave it as it is, amend it with the template
+  entries it lacks, delete and recreate it from the template, or delete it; a
+  file that does not offers create it from the template adapted to this project,
+  create it from the plain template, or skip it — and the adapted option is
+  withheld when the root holds nothing to adapt to, since it would produce
+  exactly what the plain one does. Existing files are asked about first because
+  that is the only place in the skill where content can be overwritten or
+  deleted, and both destructive options say up front that nothing is committed
+  yet, so git has no copy to recover from. The second pass runs after `git init`
+  and carries only what a template cannot answer: which editor and tool folders
+  to ignore, and which licence — MIT, or any other named through "Other". The
+  README invents nothing, with unanswered placeholders left standing rather than
+  filled with plausible fiction, and a licence is written verbatim or not at
+  all. The copyright line takes its year and name from the context block on
+  every path, and an unset `user.name` is asked for rather than guessed.
+- `init` ships two starter templates in `skills/init/templates/` — a
+  stack-agnostic `.gitignore` and a README skeleton — written as they are when
+  the user picks the template option. They sit with the skill rather than with
+  the references it reads, which hold material a skill reads to decide
+  something, not files it writes.
+
+### Fixed
+
+- A context block reported an empty git result as though there were no repo.
+  The old form, `git … 2>/dev/null || echo "(no repo)"`, only spoke up when git
+  failed: on a detached HEAD `branch --show-current` exits 0 and prints
+  nothing, so the block showed a blank line, and a repo with no tags printed
+  nothing at all. Every context line now runs as
+  `out=$(…) || true; echo "${out:-(marker)}"`, and the markers name the state
+  they found — no branch, no tags, nothing staged, working tree clean.
+- Each skill's Rules section now carries the same three constraints for the
+  commands it runs during the task. Guard every exit, because several git
+  commands report an ordinary answer through a non-zero status: `check-ignore`
+  exits 1 for "not ignored", `config --get` exits 1 for unset, `rev-parse HEAD`
+  exits 128 before the first commit. Do not re-run a context command bare to
+  confirm what is already printed. And never leave a glob unquoted — zsh aborts
+  on an unmatched one during expansion, which no `2>/dev/null` can suppress.
+
 ## [0.6.0] - 2026-08-17
 
 ### Added

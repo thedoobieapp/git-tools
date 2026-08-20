@@ -1,0 +1,27 @@
+# Secrets and local environment
+.env
+.env.*
+*.pem
+*.key
+
+# Dependencies
+node_modules/
+vendor/
+.venv/
+
+# Build output
+dist/
+build/
+target/
+out/
+
+# Logs, caches and scratch
+*.log
+logs/
+.cache/
+tmp/
+
+# OS and editor cruft
+.DS_Store
+Thumbs.db
+*.swp

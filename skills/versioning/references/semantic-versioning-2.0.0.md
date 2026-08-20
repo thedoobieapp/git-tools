@@ -367,6 +367,6 @@ GitHub](https://github.com/semver/semver/issues).
 
 ## Related Specifications
 
-- [Conventional Commits 1.0.0](conventional-commits-1.0.0.md) - Commit message convention that maps to SemVer version increments
-- [Keep a Changelog 1.1.0](keep-a-changelog-1.1.0.md) - Changelog format that recommends following Semantic Versioning
-- [Conventional Branch 1.0.0](conventional-branch-1.0.0.md) - Branch naming that incorporates SemVer in release branches
+- [Conventional Commits 1.0.0](../../commit/references/conventional-commits-1.0.0.md) - Commit message convention that maps to SemVer version increments
+- [Keep a Changelog 1.1.0](../../changelog/references/keep-a-changelog-1.1.0.md) - Changelog format that recommends following Semantic Versioning
+- [Conventional Branch 1.0.0](../../branch/references/conventional-branch-1.0.0.md) - Branch naming that incorporates SemVer in release branches

@@ -9,15 +9,15 @@ model: sonnet
 
 ## Context
 
-- Repo check (`(no repo)` means this directory is not under git): !`git rev-parse --show-toplevel 2>/dev/null || echo "(no repo)"`
-- Current branch: !`git branch --show-current 2>/dev/null || echo "(no repo)"`
-- Latest tags: !`git tag --sort=-version:refname 2>/dev/null | head -5`
-- Recent commits since last tag: !`git log $(git describe --tags --abbrev=0 2>/dev/null)..HEAD --oneline --no-merges 2>/dev/null || git log --oneline -10 2>/dev/null || echo "(no commits yet)"`
-- Git status: !`git status --short 2>/dev/null || echo "(no repo)"`
+- Repo check (`(no repo)` means this directory is not under git): !`out=$(git rev-parse --show-toplevel 2>/dev/null) || true; echo "${out:-(no repo)}"`
+- Current branch: !`out=$(git branch --show-current 2>/dev/null) || true; echo "${out:-(no branch — detached HEAD, or no repo)}"`
+- Latest tags: !`out=$(git tag --sort=-version:refname 2>/dev/null | head -5) || true; echo "${out:-(no tags yet)}"`
+- Recent commits since last tag: !`out=$(git log $(git describe --tags --abbrev=0 2>/dev/null)..HEAD --oneline --no-merges 2>/dev/null || git log --oneline -10 2>/dev/null) || true; echo "${out:-(no commits yet)}"`
+- Git status: !`out=$(git status --short 2>/dev/null) || true; echo "${out:-(working tree clean)}"`
 
 ## Your task
 
-Manage version numbers following `${CLAUDE_PLUGIN_ROOT}/skills/docs/semantic-versioning-2.0.0.md` conventions.
+Manage version numbers following `${CLAUDE_PLUGIN_ROOT}/skills/versioning/references/semantic-versioning-2.0.0.md` conventions.
 
 ### Step 0 — Confirm there is a repo
 
@@ -28,7 +28,7 @@ nothing below applies until there is one.
 ### Step 1 — Detect current version
 
 Look for the project version in the locations listed in
-`${CLAUDE_PLUGIN_ROOT}/skills/docs/version-sources.md` —
+`${CLAUDE_PLUGIN_ROOT}/skills/versioning/references/version-sources.md` —
 first match wins, but every other file carrying a version still gets updated.
 
 If no version is found, use **AskUserQuestion** to establish the starting point —
@@ -40,7 +40,7 @@ Report the detected version and its source file to the user.
 ### Step 2 — Analyze commits for bump suggestion
 
 Review conventional commits since the last version tag and apply the bump table in
-`${CLAUDE_PLUGIN_ROOT}/skills/docs/version-sources.md`.
+`${CLAUDE_PLUGIN_ROOT}/skills/versioning/references/version-sources.md`.
 
 Present a summary:
 
@@ -109,10 +109,28 @@ Suggest next steps:
 - Pre-release versions (e.g., `1.0.0-alpha.1`) are valid — support them if requested
 - If on major version 0, remind the user that the API is considered unstable per SemVer
 - NEVER include co-authoring or attribution references in commits
+- Any git command you run during the task must be written so a non-zero exit
+  cannot abort the step. Use `out=$(<command> 2>/dev/null) || true; echo "${out:-(marker)}"`,
+  the same form the context block uses. Several git commands report an ordinary,
+  expected answer through a non-zero status — `check-ignore` exits `1` for "not
+  ignored", `config --get` exits `1` for "unset", `config --unset` exits `5` for
+  "was not set", `rev-parse HEAD` exits `128` on a repo with no commits — and an
+  unguarded one of those reads as a crash and stops work that should have
+  continued
+- Do not re-run a context command just to confirm what is already printed above.
+  Do re-check when its output contradicts itself or carries a shell error — a
+  wrong answer is worth verifying — but re-run it in the guarded form, never
+  bare, or the check fails the same way the original did
+- Never put an unquoted glob (`README*`, `*.md`) in a command. Shells disagree
+  about an unmatched one: bash and `sh` pass it through literally, zsh aborts the
+  whole command before it runs and prints `no matches found` — which no `2>/dev/null`
+  can suppress, because the shell emits it during expansion rather than the
+  command emitting it. The result is a confident wrong answer. List the directory
+  and filter it instead: `ls -A | grep -iE "^(readme|license)"`
 
 ---
 
 # Links
 
-- [version-sources](../docs/version-sources.md)
-- [semantic-versioning-2.0.0](../docs/semantic-versioning-2.0.0.md)
+- [version-sources](references/version-sources.md)
+- [semantic-versioning-2.0.0](references/semantic-versioning-2.0.0.md)

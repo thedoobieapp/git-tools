@@ -44,6 +44,6 @@ In summary, conventional branch is designed to improve project organization, com
 
 ## Related Specifications
 
-- [Conventional Commits 1.0.0](conventional-commits-1.0.0.md) - Commit message convention with aligned type prefixes (`feat:`, `fix:`, `chore:`)
-- [Semantic Versioning 2.0.0](semantic-versioning-2.0.0.md) - Version numbering used in `release/` branches (e.g., `release/v1.2.0`)
-- [Keep a Changelog 1.1.0](keep-a-changelog-1.1.0.md) - Changelog format that complements the branch-based workflow
+- [Conventional Commits 1.0.0](../../commit/references/conventional-commits-1.0.0.md) - Commit message convention with aligned type prefixes (`feat:`, `fix:`, `chore:`)
+- [Semantic Versioning 2.0.0](../../versioning/references/semantic-versioning-2.0.0.md) - Version numbering used in `release/` branches (e.g., `release/v1.2.0`)
+- [Keep a Changelog 1.1.0](../../changelog/references/keep-a-changelog-1.1.0.md) - Changelog format that complements the branch-based workflow

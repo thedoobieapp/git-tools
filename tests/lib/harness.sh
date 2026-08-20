@@ -23,13 +23,23 @@ set -uo pipefail
 TESTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PLUGIN_ROOT="$(cd "$TESTS_DIR/.." && pwd)"
 SKILLS_DIR="$PLUGIN_ROOT/skills"
-REFERENCES_DIR="$PLUGIN_ROOT/skills/docs"
 MANIFEST="$PLUGIN_ROOT/.claude-plugin/plugin.json"
 MARKETPLACE="$PLUGIN_ROOT/.claude-plugin/marketplace.json"
 
 # Every SKILL.md the plugin ships, in a stable order.
 skill_files() {
   find "${1:-$SKILLS_DIR}" -type f -name SKILL.md | sort
+}
+
+# Every reference file the plugin ships, in a stable order.
+#
+# There is no shared reference directory. Each skill keeps its own material in a
+# references/ folder beside its SKILL.md, and a skill that reads a spec it does
+# not own reads it out of the folder that does — so the file still exists once.
+# The `skills/docs/` directory this used to name, and the carrier SKILL.md that
+# made it install, are both gone: a skill's own folder already installs.
+reference_files() {
+  find "${1:-$SKILLS_DIR}" -type f -path '*/references/*.md' | sort
 }
 
 # Every shell script the plugin ships. git-tools carries none today — its skills

@@ -1,6 +1,6 @@
 ---
 name: commit
-allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git log:*), Bash(git diff:*), Bash(git check-ignore:*), Bash(git restore:*), Bash(git ls-files:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(echo:*), Read, Edit, Write
+allowed-tools: Bash(git add:*), Bash(git status:*), Bash(git commit:*), Bash(git log:*), Bash(git diff:*), Bash(git restore:*), Bash(git ls-files:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(awk:*), Bash(sort:*), Bash(wc:*), Bash(echo:*), Read, Edit, Write
 description: Create conventional git commits with proper type, scope, and message. Use when committing staged changes, writing commit messages, preparing commits for review, or when the user says 'commit this', 'commit my changes', 'save my work', 'create a commit', or 'what should the commit message be'.
 model: sonnet
 ---
@@ -9,13 +9,13 @@ model: sonnet
 
 ## Context
 
-- Repo check (`(no repo)` means this directory is not under git): !`git rev-parse --show-toplevel 2>/dev/null || echo "(no repo)"`
-- Current git status: !`git status 2>/dev/null || echo "(no repo)"`
-- Current git diff (staged and unstaged changes): !`git diff HEAD 2>/dev/null || git diff --cached 2>/dev/null || echo "(no repo)"`
-- Current branch: !`git branch --show-current 2>/dev/null || echo "(no repo)"`
-- Recent commits: !`git log --oneline -10 2>/dev/null || echo "(no commits yet — this would be the first)"`
-- Staged files: !`git diff --cached --name-only 2>/dev/null || echo "(no repo)"`
-- Untracked (not yet ignored): !`git ls-files --others --exclude-standard 2>/dev/null || echo "(no repo)"`
+- Repo check (`(no repo)` means this directory is not under git): !`out=$(git rev-parse --show-toplevel 2>/dev/null) || true; echo "${out:-(no repo)}"`
+- Current git status: !`out=$(git status 2>/dev/null) || true; echo "${out:-(no repo)}"`
+- Current git diff (staged and unstaged changes): !`out=$(git diff HEAD 2>/dev/null || git diff --cached 2>/dev/null) || true; echo "${out:-(no tracked changes)}"`
+- Current branch: !`out=$(git branch --show-current 2>/dev/null) || true; echo "${out:-(no branch — detached HEAD, or no repo)}"`
+- Recent commits: !`out=$(git log --oneline -10 2>/dev/null) || true; echo "${out:-(no commits yet — this would be the first)}"`
+- Staged files: !`out=$(git diff --cached --name-only 2>/dev/null) || true; echo "${out:-(nothing staged)}"`
+- Untracked (not yet ignored): !`out=$(git ls-files --others --exclude-standard 2>/dev/null) || true; echo "${out:-(none)}"`
 
 ## Your task
 
@@ -38,8 +38,14 @@ nothing below applies until there is one.
 
 Before drafting a message, screen the files about to enter the commit so nothing that belongs outside the repo (secrets, dependencies, build output, OS/editor cruft) slips in. This screen focuses on **newly added / untracked files** — `.gitignore` cannot un-track a file that is already tracked in git.
 
-1. Build the candidate set: **staged files** + **untracked-not-ignored files** (the latter get staged in the final step, so they count).
-2. Compare each candidate against the categories in `${CLAUDE_PLUGIN_ROOT}/skills/docs/gitignore-patterns.md` and flag secrets, dependency directories, build output, OS/editor cruft, logs/caches, and unusually large or binary blobs. Run `git check-ignore <path>` to avoid re-flagging anything already ignored.
+1. Build the candidate set and screen it in one command. It takes the **staged files** plus the **untracked-not-ignored files** (the latter get staged in the final step, so they count) and prints one line per flagged path as `<category><TAB><path><TAB><what matched>`:
+
+```bash
+out=$( { git diff --cached --name-only 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null; } | sort -u | awk -f "${CLAUDE_PLUGIN_ROOT}/skills/commit/scripts/screen.awk" 2>/dev/null ) || true; echo "${out:-(nothing flagged)}"
+```
+
+   The script carries the categories of `${CLAUDE_PLUGIN_ROOT}/skills/commit/references/gitignore-patterns.md` — secrets, dependency directories, build output, OS and editor cruft, logs and caches, large or binary blobs — and it is the screen: it sees every candidate, and it knows the file sizes, which reading a path list cannot tell you. `git ls-files --exclude-standard` has already dropped everything `.gitignore` covers, so a flagged path is one git would really commit. Read `gitignore-patterns.md` when a finding needs explaining rather than listing — why a committed secret has to be rotated even after it is removed, why a `vendor/` or a `.vscode/` is sometimes committed on purpose.
+2. Judge what comes back. Every line is a warning, not a verdict: a `.env.example`, a Go `vendor/`, a committed `bin/` of scripts and a shared `.vscode/settings.json` are all ordinary. Drop the lines that are plainly intentional here and carry the rest to the user. Do not add findings of your own beyond what the script reports unless something in the diff makes it obvious — an API key pasted into a source file, say, which no filename pattern can catch.
 3. If nothing is flagged, continue to the next step silently.
 4. If files are flagged, list them (grouped by reason) and use **AskUserQuestion** to let the user choose what to do per group:
    - **Add to .gitignore** — append the appropriate pattern to `.gitignore` (create the file if missing), then unstage the file with `git restore --staged <path>`
@@ -60,7 +66,7 @@ Completion: you have the smallest number of groups where every group passes the 
 
 ### Step 4 — Draft the commit message(s)
 
-Draft one message per group from Step 3, each following `${CLAUDE_PLUGIN_ROOT}/skills/docs/conventional-commits-1.0.0.md`
+Draft one message per group from Step 3, each following `${CLAUDE_PLUGIN_ROOT}/skills/commit/references/conventional-commits-1.0.0.md`
 
 **Choosing the type:**
 
@@ -150,11 +156,30 @@ EOF
   question. Nothing is committed until every group has been approved
 - Match the style of recent commits in the repository when possible
 - NEVER include co-authoring or attribution references in commits
+- Any git command you run during the task must be written so a non-zero exit
+  cannot abort the step. Use `out=$(<command> 2>/dev/null) || true; echo "${out:-(marker)}"`,
+  the same form the context block uses. Several git commands report an ordinary,
+  expected answer through a non-zero status — `check-ignore` exits `1` for "not
+  ignored", `config --get` exits `1` for "unset", `config --unset` exits `5` for
+  "was not set", `rev-parse HEAD` exits `128` on a repo with no commits — and an
+  unguarded one of those reads as a crash and stops work that should have
+  continued
+- Do not re-run a context command just to confirm what is already printed above.
+  Do re-check when its output contradicts itself or carries a shell error — a
+  wrong answer is worth verifying — but re-run it in the guarded form, never
+  bare, or the check fails the same way the original did
+- Never put an unquoted glob (`README*`, `*.md`) in a command. Shells disagree
+  about an unmatched one: bash and `sh` pass it through literally, zsh aborts the
+  whole command before it runs and prints `no matches found` — which no `2>/dev/null`
+  can suppress, because the shell emits it during expansion rather than the
+  command emitting it. The result is a confident wrong answer. List the directory
+  and filter it instead: `ls -A | grep -iE "^(readme|license)"`
 
 ---
 
 # Links
 
-- [conventional-commits-1.0.0](../docs/conventional-commits-1.0.0.md)
+- [conventional-commits-1.0.0](references/conventional-commits-1.0.0.md)
 - [init](../init/SKILL.md)
-- [gitignore-patterns](../docs/gitignore-patterns.md)
+- [gitignore-patterns](references/gitignore-patterns.md) — the categories, and why each one matters
+- [screen.awk](scripts/screen.awk) — the same categories as a screen over the candidate paths

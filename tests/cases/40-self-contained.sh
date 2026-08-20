@@ -32,10 +32,17 @@ plugin_root_paths() {
 
 # broken_paths ROOT — every path named by a document under ROOT that does not
 # resolve, or resolves outside ROOT. Prints one `file -> path (why)` per line.
+#
+# CHANGELOG.md is exempt. It is a record of what was true at each release, and
+# an entry describing a directory that has since been removed names that
+# directory correctly — 0.5.0 moved the references into `skills/docs/` and the
+# entry saying so has to keep saying so. Holding a history to today's tree would
+# force every past entry to be rewritten by whoever moves a file next, which is
+# the one thing a changelog must not allow.
 broken_paths() {
   local root="$1" f d link target parent abs
   root="$(abs_dir "$root")"
-  for f in $(find "$root" -type f -name '*.md' -not -path "$root/tests/*"); do
+  for f in $(find "$root" -type f -name '*.md' -not -path "$root/tests/*" -not -name CHANGELOG.md); do
     d="$(dirname "$f")"
     while IFS= read -r link; do
       [ -n "$link" ] || continue
@@ -66,7 +73,7 @@ test_every_path_the_documents_name_resolves_inside_the_plugin() {
   desc "every link and \${CLAUDE_PLUGIN_ROOT} path resolves, and stays inside the plugin"
   broken="$(broken_paths "$PLUGIN_ROOT")"
   assert_empty "$broken" "a document names a path that is not there"
-  note "$(find "$PLUGIN_ROOT" -type f -name '*.md' -not -path "$PLUGIN_ROOT/tests/*" | wc -l | tr -d ' ') documents checked"
+  note "$(find "$PLUGIN_ROOT" -type f -name '*.md' -not -path "$PLUGIN_ROOT/tests/*" -not -name CHANGELOG.md | wc -l | tr -d ' ') documents checked"
 }
 
 test_the_plugin_is_whole_when_copied_somewhere_else() {
@@ -117,26 +124,24 @@ test_every_reference_file_is_used() {
   # The other half of completeness: a reference nothing reads is dead weight
   # shipped to every user, and it is usually the leftover of a link that moved.
   #
-  # Only the SKILL.md files count as readers. The references live under
-  # skills/ and cross-link each other, so grepping the whole directory would
-  # find every file named by a sibling and the test would pass on its own
-  # footprints.
+  # Only the SKILL.md files count as readers. The references cross-link each
+  # other, so grepping the whole skills directory would find every file named by
+  # a sibling and the test would pass on its own footprints.
   #
-  # The references' own SKILL.md — the one that makes the directory install as a
-  # skill — is neither a reference nor a reader. Counting it as a reader would
-  # let the carrier vouch for its own contents, which is the same footprint
-  # problem one level in.
-  readers="$(skill_files | grep -v "^$REFERENCES_DIR/SKILL.md$")"
+  # A reference no longer has to be read by the skill it sits under. Each one
+  # lives beside its owner, but `release` owns none and reads three across —
+  # version-sources from versioning, commit-type-mapping and keep-a-changelog
+  # from changelog. So the contract is that *some* SKILL.md names the file, not
+  # that its neighbour does.
+  readers="$(skill_files)"
   unused=""
-  for f in "$REFERENCES_DIR"/*.md; do
-    [ -f "$f" ] || continue
-    [ "$(basename "$f")" = "SKILL.md" ] && continue
+  for f in $(reference_files); do
     grep -q "$(basename "$f")" $readers \
-      || unused="${unused:+$unused }$(basename "$f")"
+      || unused="${unused:+$unused }$(rel "$f")"
   done
   assert_empty "$unused" "a reference file no skill points at"
-  n="$(ls "$REFERENCES_DIR"/*.md 2>/dev/null | grep -cv '/SKILL\.md$' | tr -d ' ')"
-  assert_ne "$n" "0" "the references directory must not be empty"
+  n="$(reference_files | grep -c . | tr -d ' ')"
+  assert_ne "$n" "0" "the plugin must ship at least one reference"
   note "$n reference files, all of them read by at least one skill"
 }
 

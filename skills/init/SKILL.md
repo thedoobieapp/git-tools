@@ -1,7 +1,8 @@
 ---
 name: init
-allowed-tools: Bash(git init:*), Bash(git rev-parse:*), Bash(git status:*), Bash(git branch:*), Bash(git remote:*), Bash(git ls-remote:*), Bash(git config:*), Bash(git check-ignore:*), Bash(ls:*), Bash(cat:*), Bash(head:*), Bash(echo:*), Read, Write, Edit
-description: Initialize a git repository in the project root, confirming the base branch name, the remote it will be pushed to, and a starter .gitignore. Use when the user wants to put a project under version control, asks whether the project is a git repo yet, mentions 'git init', or says things like 'set up git here', 'this project has no git', 'start tracking this in git', 'make this a repo', 'add the remote', 'point this repo at GitHub'. Also covers choosing the default/base branch name for a brand-new repo and wiring up origin.
+allowed-tools: Bash(git init:*), Bash(git rev-parse:*), Bash(git status:*), Bash(git branch:*), Bash(git config:*), Bash(git check-ignore:*), Bash(ls:*), Bash(cat:*), Bash(head:*), Bash(find:*), Bash(grep:*), Bash(date:*), Bash(echo:*), Bash(rm:*), Bash(sed:*), Read, Write, Edit, Skill
+description: Put the project root under git locally — the base branch, then one question each for the three starter files, .gitignore, README.md and LICENSE, whether they are already there or not. Use when the user wants a project under version control, asks whether it is a repo yet, or says things like 'set up git here', 'write a starter README', 'replace my gitignore'. Also covers naming the base branch of a brand-new repo. Local only — no remote is created or configured.
+disable-model-invocation: true
 model: sonnet
 ---
 
@@ -9,78 +10,118 @@ model: sonnet
 
 ## Context
 
-- Project root: !`pwd`
-- Repo toplevel (`(no repo)` means this directory is not in a git repo): !`git rev-parse --show-toplevel 2>/dev/null || echo "(no repo)"`
-- Remotes of that repo (`(none)` means no remote is configured): !`git remote -v 2>/dev/null | grep . || echo "(none)"`
-- Configured default branch: !`git config --get init.defaultBranch 2>/dev/null || echo "(unset)"`
-- Root contents: !`ls -A`
-- Editor and tool folders present (`(none)` means there is nothing to decide): !`ls -d .vscode .idea .zed .fleet .claude 2>/dev/null | grep . || echo "(none)"`
-- Docs root managed by `pm`: !`find . -mindepth 2 -maxdepth 2 -name pm.config.json 2>/dev/null | sed 's|/pm.config.json$||; s|^\./||' | grep . || echo "(none)"`
-- Existing .gitignore: !`head -40 .gitignore 2>/dev/null || echo "(none)"`
+- Project root: !`out=$(pwd 2>/dev/null) || true; echo "${out:-(working directory is gone)}"`
+- Repo toplevel (`(no repo)` means this directory is not in a git repo): !`out=$(git rev-parse --show-toplevel 2>/dev/null) || true; echo "${out:-(no repo)}"`
+- Configured default branch: !`out=$(git config --get init.defaultBranch 2>/dev/null) || true; echo "${out:-(unset)}"`
+- Root contents: !`out=$(ls -A 2>/dev/null) || true; echo "${out:-(empty directory)}"`
+- Editor and tool folders present (`(none)` means there is nothing to decide): !`out=$(ls -d .vscode .idea .zed .fleet .claude 2>/dev/null) || true; echo "${out:-(none)}"`
+- Docs root managed by `pm`: !`out=$(find . -mindepth 2 -maxdepth 2 -name pm.config.json 2>/dev/null | sed 's|/pm.config.json$||; s|^\./||') || true; echo "${out:-(none)}"`
+- Existing .gitignore: !`out=$(head -40 .gitignore 2>/dev/null) || true; echo "${out:-(none)}"`
+- Existing README / LICENSE: !`out=$(ls -A 2>/dev/null | grep -iE "^(readme|license|licence|copying)") || true; echo "${out:-(none)}"`
+- Name for the copyright line: !`out=$(git config --get user.name 2>/dev/null) || true; echo "${out:-(unset)}"`
+- Current year: !`out=$(date +%Y 2>/dev/null) || true; echo "${out:-(unknown)}"`
+
 
 ## Your task
 
-Put the project root under git, or report that it already is.
+Put the project root under git **locally**, and settle the three starter files — `.gitignore`, `README.md`, `LICENSE` — whether they are missing or already there.
+
+The skill ends at the local repository. A repo with no remote is a finished repo, and the report says so as a fact about what was done rather than as work left over.
 
 ### Step 1 — Establish repo state
 
-Read the context above and settle on exactly one of three states:
+Read the context above and settle on exactly one of three states.
 
 | State | Signal | What to do |
 |---|---|---|
-| **Already a repo** | Repo toplevel equals the project root | Report the current branch and status. If the *Remotes* line reads `(none)`, ask **only** the Remote question from Step 2 — not the branch, not the folders, not the `.gitignore` — and if a URL comes back, run the check and the `git remote add` from Step 3. Then stop — there is nothing else to initialize |
+| **Already a repo** | Repo toplevel equals the project root | Report the current branch and status, then stop — there is nothing to initialize |
 | **Inside a parent repo** | Repo toplevel is an *ancestor* of the project root | Report the parent repo's path, then use **AskUserQuestion**: work in the parent repo, or create a nested repo here (warn that nesting confuses tooling and the parent will see this directory as untracked) |
-| **No repo** | Toplevel is empty or the command errored | Continue to Step 2 |
+| **No repo** | Repo toplevel reads `(no repo)` | Continue to Step 2 |
 
-The *Remotes* line describes whatever repo the *Repo toplevel* line names. In the
-**Inside a parent repo** state those are the parent's remotes, not this
-directory's — a nested repo created here starts with none, whatever that line
-says.
+Complete when the state is named out loud and, for the first two, the user has been told what it means.
 
-A repo that already lists a remote is finished. Say what `origin` points at and
-stop: never rewrite, re-point, rename or offer to replace a remote that is
-already there.
+### Step 2 — The branch, and each of the three starter files
 
-Complete when the state is named out loud and, for the first two, the user has been told what it means. For a repo that already exists, that includes what `origin` points at, or that there is none.
+**One AskUserQuestion** call, always four questions: the branch, then `.gitignore`, `README.md` and `LICENSE`, one question each. Every file gets one whether or not it is there — what changes is which options it carries.
 
-### Step 2 — Confirm everything, once
+**The branch question** lists `master` first and as the default, then `main`, then the *Configured default branch* from the context when it is set and is neither of those. The tool's built-in "Other" choice takes any other name — ask for one there rather than in prose.
 
-Every answer this skill needs is knowable from the context block, and none of
-them depends on another, so all of them are asked before anything is created.
-Use a **single AskUserQuestion** call carrying these questions:
+**A file the context found** — `.gitignore`, a `README*`, a `LICENSE*` or a `COPYING*`:
+
+| # | Option | What it does |
+|---|---|---|
+| 1 | **Leave it as it is** | Nothing is written. The default |
+| 2 | Amend it — add what the template has and it lacks | Adds to the file and rewrites none of it |
+| 3 | Delete and recreate it from the template | Discards the current content and writes the template |
+| 4 | Delete it | Removes the file, writes nothing |
+
+Options 3 and 4 discard what is there. Say so in the question's text, and say that **nothing is committed yet**, so git has no copy to recover it from.
+
+For a `LICENSE` there is no template to read those rows against: row 2 amends the copyright line and leaves the licence text on disk exactly as it is, and row 3 writes the licence chosen in Step 4.
+
+**A `.gitignore` or a `README.md` the context did not find:**
+
+| # | Option | What it does | Offered when |
+|---|---|---|---|
+| 1 | **Create it from the template, adapted to this project** | The template, with what the project's own files answer filled in | there is a project here — see below |
+| 2 | Create it from the template | The template as it is, placeholders and all | always |
+| 3 | Skip it | Nothing is written | always |
+
+Option 1 is the default where it is offered, option 2 where it is not.
+
+**A `LICENSE` the context did not find** gets two options and never three: write one, or skip it. There is no adapted option, because a licence text adapts to nothing — *which* licence is the only open question, and it is asked in Step 4 and answered by [`licensing`](../licensing/SKILL.md).
+
+**"Adapted to this project" needs a project to adapt to.** Withhold option 1 in exactly one case: the context block's `ls -A` shows nothing but `.git/`, `.gitattributes` and the starter files this skill itself writes — `.gitignore`, `README*`, `LICENSE*`, `COPYING*`. There is then nothing to read but git's own bookkeeping and this skill's own output, so the option would produce exactly what option 2 produces while implying otherwise. Anything else in the root — a manifest, a source directory, a `Makefile`, an editor or tool folder, a stray file — is something to read, and the option is offered.
+
+Leaving every existing file alone and skipping every missing one is a complete answer. The repo still gets initialized; Steps 4 and 5 then have nothing to do.
+
+Complete when a branch name is settled and each of the three files has an outcome — left alone, amended, recreated, deleted, created or skipped.
+
+### Step 3 — Initialize
+
+1. Run `git init -b <base-branch>`.
+2. If that fails because the git version predates `-b`, run `git init`, then `git branch -m <base-branch>`.
+3. Confirm the name with `git branch --show-current`.
+
+Use `git branch --show-current` and not `git rev-parse --abbrev-ref HEAD`. A just-initialized repo has an **unborn HEAD** — the ref names the branch but no commit has been made on it — so `rev-parse` exits `128` with `ambiguous argument 'HEAD'` in the one state this step is always in, while `--show-current` reads the ref itself and exits `0`.
+
+Complete when HEAD is on the chosen branch.
+
+### Step 4 — Survey the project, then ask what the templates cannot answer
+
+Step 2 settled what happens to each file and where its content comes from. What remains is the reading that "adapted" promised, and the questions no template and no file on disk can answer.
+
+#### The survey
+
+It runs **here** — after `git init`, before the questions below are drafted — and **only when at least one file's Step 2 answer was *adapted***. If none was, go straight to the questions.
+
+Walk the tree from the project root under two bounds, and no others:
+
+- **Depth 4.** `find . -maxdepth 4`. Deeper than `apps/web/src/`, shallow enough that no tree can stall the skill.
+- **No dependency or build directories.** Never descend into `node_modules`, `vendor`, `.venv`, `venv`, `target`, `build`, `dist`, `out`, `.next`, `Pods` or `.git`. A vendored copy of someone else's project is not this project, and its manifests would report stacks this repo does not use.
+
+Collect three things, and nothing else:
+
+| For                               | What to collect                                                                                                                                                                                                                                                                                                        |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The `.gitignore`                  | Every stack a manifest indicates **anywhere in the walk**, not only in the root: `package.json` (Node), `pyproject.toml` / `requirements.txt` (Python), `Cargo.toml` (Rust), `go.mod` (Go), `Gemfile` (Ruby), `composer.json` (PHP), Xcode/Android project files. More than one may apply, and a monorepo usually does |
+| The `README.md` name and commands | The name from a root manifest, else the directory name. Every command that **literally exists**: `package.json` scripts, `Makefile` targets, `justfile` recipes, `pyproject.toml` `[project.scripts]`, Cargo bins, task-runner entries                                                                                 |
+| The `README.md` description       | A manifest's `description` field, verbatim. If no manifest carries one, read enough of the tree to draft **2–3 lines** saying what the project is — and take that draft to the Description question below rather than writing it                                                                                       |
+
+#### The questions
+
+Up to three, in **one AskUserQuestion** call. Include only the ones that apply;
+if none does, skip them.
 
 | Header | Question | Options | Included when |
 |---|---|---|---|
-| Branch | What should the base branch be called? | **`master`** / `main` / the value of `init.defaultBranch` from the context, when it is set and differs from those two | always |
-| Remote | Where will this repo be pushed? Type the URL into "Other" — neither option below is one | **Skip — no remote for now** / I have a URL — type it in Other | always |
-| Ignore | Which of these should git ignore? (`multiSelect: true`) | one per folder the context actually found — see below | the *editor and tool folders* or *docs root* line found something |
-| Gitignore | This project has no `.gitignore`. Write one? | **Write it — the report shows it in full** / Show me the draft first / Skip the `.gitignore` | the *existing .gitignore* line reads `(none)` |
+| Ignore | Which of these should git ignore? (`multiSelect: true`) | one per folder the context actually found — see below | a `.gitignore` is being created, amended or recreated, *and* the editor and tool folders or docs root line found something |
+| License | Which licence? | **MIT** / Apache-2.0 / GPL-3.0 / Show me all of them | a `LICENSE` is being created or recreated |
+| Description | This is what the project's files say it is — use it? | **the drafted 2–3 lines** / Leave the placeholder, I will write it myself | the `README.md` is being adapted *and* no manifest carried a `description` |
 
-Bolded options are the defaults — list them first. Four is the tool's cap: when
-Ignore and Gitignore are both included the call is full, and anything further
-would have to split into a second one.
+Bolded options are the defaults — list them first.
 
-The tool's built-in "Other" choice covers any name not listed — do not ask for one
-in prose. That holds for both free-text questions: the branch name and the remote
-URL are typed there or not at all.
-
-Nothing on disk is consulted for the URL. Do not read `package.json`, a
-`Cargo.toml`, a `gh` config, the directory name or a parent repo's remote to
-propose one — a wrong remote is worse than no remote, and this is the one fact
-only the user has.
-
-If the user picks "I have a URL" without typing one, ask the remote question
-again on its own and say plainly that the URL goes in the "Other" box. Never
-carry on with a guess, and never take the URL through prose.
-
-Skipping is a complete answer, not a deferral. A repo with no remote works, and
-Step 5 prints the command that adds one later.
-
-**The Ignore options.** Editor and tool folders are the one part of a
-`.gitignore` that cannot be inferred from the project type — whether `.vscode/`
-belongs to the team or to the person is a decision, not a fact about the stack.
-Ask instead of guessing. One option per folder the context found, and **never
-list a folder that is not there**:
+**The Ignore options.** Whether `.vscode/` belongs to the team or to the person is a decision, not a fact about the stack — the one part of a `.gitignore` the project type cannot answer. One option per folder the context found, and **never list a folder that is not there**:
 
 | Folder | Recommendation | Why |
 |---|---|---|
@@ -89,149 +130,109 @@ list a folder that is not there**:
 | `.claude/` | Track | Project skills, agents and hooks are shared setup; only `settings.local.json` inside it is personal |
 | `.idea/`, `.zed/`, `.fleet/` | Ignore | Mostly per-user IDE state — window layout, caches, local run configs |
 
-Mark the recommended choices in the option labels, and say in the question that
-this only decides what the `.gitignore` says: ignoring a folder does not
-un-track it once it has been committed.
+Mark the recommended choices in the option labels, and say in the question that this only decides what the `.gitignore` says: ignoring a folder does not un-track it once it has been committed.
 
-**The Gitignore question** decides whether Step 4 may write the file without
-showing it first. "Write it" is the default because the report prints the whole
-file afterwards — nothing lands unseen, it is just seen after rather than before.
-Do not ask it when a `.gitignore` already exists: the only write in that case is
-appending the folders the Ignore question just collected, and that answer is its
-own approval.
+**The License question** offers the three licences [choosealicense.com](https://choosealicense.com/licenses/) features — MIT, Apache-2.0, GPL-3.0 — plus *Show me all of them*, which hands the choice to [`licensing`](../licensing/SKILL.md) and its catalogue of forty-seven. The tool's "Other" box takes a name or an SPDX id directly: `BSD-3-Clause`, `MPL-2.0`, `AGPL-3.0`, `Unlicense`, `ISC`. Give each listed option a one-line gloss of what it grants, so the choice is made on terms rather than on familiarity:
 
-Complete when a branch name is settled, the remote question has an answer — a URL
-or a deliberate skip — and each question that was included has been answered.
+| Option | Gloss |
+|---|---|
+| **MIT** | Short and permissive. Do anything, keep the notice |
+| Apache-2.0 | Permissive, with an explicit patent grant and a changes notice |
+| GPL-3.0 | Copyleft. Anything distributed that builds on it ships its source under the same terms |
 
-### Step 3 — Initialize
+Read the licence from the answer and from nowhere else — not from the stack's convention, not from a manifest's `license` field, not from a sibling project. A licence is the one thing in a repository that is a legal decision rather than a technical one, and the wrong guess is one the user has to undo with every contributor's agreement.
 
-1. Run `git init -b <base-branch>`.
-2. If that fails because the git version predates `-b`, run `git init`, then `git branch -m <base-branch>`.
-3. Confirm with `git rev-parse --abbrev-ref HEAD` that HEAD points at the chosen name.
+**The Description question** is the one place this skill composes a sentence the project never wrote. Put the draft in the option's label, in full — the user is approving the actual line, not the idea of one. The "Other" box carries a rewrite in their own words, and leaving the placeholder is a finished answer, not a deferral. Skip the question entirely when a manifest already carries a `description` — those are the project's own words, and they go in unasked.
 
-**If Step 2 produced no URL**, the step ends here. A local repo is a finished
-repo.
+Complete when every included question has an answer.
 
-**If it produced one**, check it before wiring it up, so nothing is written on a
-URL nobody has looked at:
+### Step 5 — Carry out each file's decision
 
-```bash
-git ls-remote --exit-code <url>
-```
+Two files come from a template the plugin ships; the third comes from another skill:
 
-That exits **0** when the remote answered and already carries refs, **2** when it
-answered and is empty — the normal state of a repository created on the host a
-few minutes ago — and anything else means it could not be reached. Treat 0 and 2
-as reachable.
+| File | Where its content comes from |
+|---|---|
+| `.gitignore` | `${CLAUDE_PLUGIN_ROOT}/skills/init/templates/gitignore.template` |
+| `README.md` | `${CLAUDE_PLUGIN_ROOT}/skills/init/templates/README.template.md` |
+| `LICENSE` | [`licensing`](../licensing/SKILL.md), which ships the catalogue and writes the file |
 
-**Reachable** — run `git remote add origin <url>`, then `git remote -v` to show
-what landed. On exit 0 the remote is not empty; say so, because the first push
-will have two histories to reconcile.
+The two templates are written as they ship. **Nothing is invented, on any path** — no feature list, no badges, no roadmap, no author. A placeholder in angle brackets is filled in only where something already on disk answers it, or where the user approved a line in Step 4, and left standing where neither does: a stub the user completes beats a plausible line that is wrong.
 
-**Unreachable** — do not add it quietly, and do not abort on it. Show the URL and
-git's own error, then use **AskUserQuestion**:
+**Delete, and the delete half of "delete and recreate"** — remove exactly the file the user named, with `rm <path>` and no flags: no `-r`, no `-f`, and no second path on the line.
 
-| Header | Question | Options |
-|---|---|---|
-| Remote | `<url>` did not answer — *git's error, first line* | **Add it anyway** / Re-enter the URL in Other / Skip the remote |
+**Recreate** — after the delete, write the file exactly as the plain-template path below writes it. Recreating is not adapting: it takes the template, not the project.
 
-Bolded options are the defaults — list them first. **"Add it anyway" is the
-default**: the usual reasons a fresh remote stays silent are that the repository
-has not been created on the host yet, or that credentials are not set up in this
-shell. Neither makes the URL wrong, and neither is something this skill can tell
-apart from a typo. On "Re-enter", take the new URL from "Other" and run the check
-again — twice at most, then offer only "Add it anyway" or "Skip the remote".
+#### `.gitignore`
 
-Complete when HEAD is on the chosen branch and, if a URL was given, `origin`
-points at it or the user decided to leave it off.
+The stacks come from Step 4's survey, which looked at the whole bounded tree and not only at the root — a monorepo whose root holds no manifest at all still has stacks to cover. Whichever path runs, the editor and tool folders come from Step 4's Ignore answer and from nowhere else: a folder the user chose to track stays out of the file, whatever the template or the reference says about it.
 
-### Step 4 — Write or extend the .gitignore
+- **Amend** — do not redraft it. Append the template entries the file does not already cover, checking each with `git check-ignore -q <pattern>` — which answers by exit status: `0` means the pattern is already covered, `1` means it is not and should be appended. A `1` here is the answer, not a failure. Then append the Step 4 folders that are not covered either, and leave the rest of the file alone. If nothing is missing, write nothing and say the file was left unchanged.
+- **From the template** — write the template as it is, then append the Step 4 folders it does not cover.
+- **From the template, adapted** — start from the template, then read `${CLAUDE_PLUGIN_ROOT}/skills/commit/references/gitignore-patterns.md` and add what every stack the survey found needs, under the categories it names: secrets, dependencies, build output, OS and editor cruft, logs and caches, large blobs.
+  Add anything already sitting on disk that should be covered (a stray `.DS_Store`, a `node_modules/`, a `.env`). Then append the Step 4 folders.
 
-Step 2 already settled this. Nothing here asks a fresh question unless the user
-chose to see the draft first.
+  Write patterns that match at any depth — `node_modules/`, not `apps/web/node_modules/` — unless the pattern is inherently rooted. One unanchored line covers every copy the survey found, and the file stays readable as the tree grows.
 
-**If the root already has a `.gitignore`** (the context shows its contents), do
-not redraft it. Check whether each folder chosen in Step 2 is already covered
-with `git check-ignore -q <folder>`, and **append** only the lines that are
-missing. Leave the rest of the file alone, and report the appended lines
-verbatim. Do not ask before appending: the lines are the Ignore answer, and that
-answer is its own approval. If nothing is missing — or the user ignored none of
-them — write nothing and say the file was left unchanged.
+#### `README.md`
 
-**If there is no `.gitignore`**, draft it:
+- **Amend** — append only the template sections the file does not have, in the template's order, each as a placeholder stub. Do not touch a heading, a sentence or a code block that is already there.
+- **From the template** — write it as it is, placeholders and all, except that the title takes the project name when the directory name or a manifest gives one.
+- **From the template, adapted** — fill in three things and leave every other placeholder standing.
 
-1. Detect the project type from the root contents — `package.json` (Node), `pyproject.toml` / `requirements.txt` (Python), `Cargo.toml` (Rust), `go.mod` (Go), `Gemfile` (Ruby), `composer.json` (PHP), Xcode/Android project files, and so on. More than one may apply.
-2. Read `${CLAUDE_PLUGIN_ROOT}/skills/docs/gitignore-patterns.md` for the categories worth ignoring — secrets, dependencies, build output, OS/editor cruft, logs and caches, large blobs. If that file cannot be read, fall back to the standard ignore set for the detected stacks.
-3. Draft a `.gitignore` covering the categories that actually apply to this project, and check the root contents for anything already sitting there that matches (a stray `.DS_Store`, a `node_modules/`, a `.env`) so it is covered. The editor and tool folders come from Step 2's Ignore answer and from nowhere else — a folder the user chose to track must not appear in the draft, whatever the reference file says about it.
+On both paths the `## License` section takes the name of the licence Step 4 chose, and is dropped entirely when no licence file will exist.
 
-Then follow Step 2's Gitignore answer:
+| Placeholder                  | What fills it                                                                                                                                                                                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `# <project name>`           | A root manifest's `name`; failing that, the directory name                                                                                                                                                                                                              |
+| `<One line: …>`              | A manifest's `description`, verbatim and unedited. If none, the 2–3 lines the user approved in Step 4 — and if they declined, the placeholder stays                                                                                                                     |
+| The Install and Usage blocks | **Only a command that literally exists** as a script, target, recipe or entry point in something the survey read. `npm install` is an inference from a `package.json`, not a fact the project stated, and does not go in. A block nothing answers keeps its placeholder |
 
-- **Write it** — write the file. Step 5 prints it in full; that is the whole
-  point of the option, so the report must not summarise it.
-- **Show me the draft first** — print the draft, then use **AskUserQuestion**:
-  "Write it / Edit it / Skip .gitignore". Write only after approval.
-- **Skip the `.gitignore`** — write nothing.
+#### `LICENSE`
 
-Complete when a `.gitignore` exists in the root, was appended to, or the user
-declined one.
+The licence text comes from [`licensing`](../licensing/SKILL.md), byte for byte. This skill settles *whether* and *which*, and hands over. A licence is a legal instrument whose force is in its exact words, and two hundred lines of Apache written from memory is a plausible forgery rather than a licence.
 
-### Step 5 — Report
+**Amend** hands nothing over: leave the licence text on disk exactly as it is, and fill the copyright line only when it is missing or still a placeholder, from the *Name for the copyright line* and *Current year* lines of the context block. The README's `## License` line needs this licence's name — take it from `head -3` of the file the context block found, the title block every licence carries (`MIT License`; `Apache License` / `Version 2.0`; `GNU GENERAL PUBLIC LICENSE` / `Version 3`). Three lines names it, and the rest of the file stays shut.
 
-State the repo root, the base branch, what `origin` points at (or that there is no remote), whether a `.gitignore` was written or appended to, and which tool folders it ignores. Point the user at `commit` for the first commit, suggest the first commit message to be `chore(git): repo init`.
+**Create** and **recreate** hand over once, before the `README.md` is written:
 
-Whatever landed in the `.gitignore` is shown here, because the user may not have
-seen it before it was written:
+> Invoke `git-tools:licensing` with `args: "copy <the answer to the License question>"` — `args: "copy MIT"`, or `args: "copy"` alone when the answer was *Show me all of them*. Pass the answer verbatim, including anything typed into "Other". Pass no name and no year: `licensing` reads `user.name` itself and asks when it is unset.
 
-- **Written from a draft the user did not see** — print the complete file.
-- **Appended to an existing file** — print the appended lines.
-- **Shown before writing, or skipped** — the user has already seen it; a
-  one-line summary is enough.
+When it finishes, two things are settled: the licence's **full name** and the **path** it wrote. Use the name `licensing` resolved rather than the words typed into the question — text typed into "Other" may have matched a different licence. Read the file's name and leave its contents alone on this path: opening a `LICENSE` is how licence text gets into the conversation, and from there into a `Write` call.
 
-Close with the one command the repo still needs, printed as text to run later and
-never run here:
+Two outcomes, neither a failure:
 
-- **A remote was added** — `git push -u origin <base-branch>`, and say it belongs
-  *after* the first commit; a branch with no commits has nothing to push.
-- **No remote** — `git remote add origin <url>`, for whenever the repository
-  exists on the host.
+- **A file was written.** Its licence name fills the README's `## License` line and the Step 6 report; its path is the file's path for the rest of this skill.
+- **Nothing was written** — the user backed out, or nothing matched what they typed. Report the `LICENSE` as not written, drop the README's `## License` section the way a skipped licence drops it, and carry on with the rest of Step 5. A half-written `LICENSE` claims terms the project does not have.
 
-## Integration
+Complete when every file's decision has been carried out — or the user was told, per file, exactly why it was not.
 
-- **After this skill**: use `commit` to make the first conventional commit
-- **Then**: use `branch` to start feature work off the base branch
+### Step 6 — Report
+
+Name the repo root, the base branch, that the repo is local with no remote, and each of the three starter files with its path and what happened to it. Then point the user at `commit` for the first commit, suggesting `chore(git): repo init` as its message.
+
+**Name the path and the outcome, and stop there.** Every file named here is on disk at a path the user can open, and a report that reprints what it just wrote — in full, as an excerpt, as the added lines or as licence text — buries the one thing only the report can say: what happened, and what is left to do.
+
+- **Created or recreated** — say which source it came from: the template as it ships, the template with the Step 4 answers filled in, or, for the `LICENSE`, the licence by name and that `licensing` wrote its text verbatim from the catalogue the plugin ships.
+- **Amended** — say how many lines were added and what they cover (for example, "3 lines, the editor folders you chose"). Describe them; do not reproduce them.
+- **Deleted** — say so plainly, and that it is not recoverable from git.
+- **Adapted** — name which placeholders the survey filled and which are still standing, by the section they sit in rather than by quoting them, so the remaining ones read as work left rather than as an oversight. If the README's description is the drafted one, say it was written here and approved, not lifted from the project.
 
 ## Rules
 
-- Every decision the user has to make goes through **AskUserQuestion** — the nested-repo
-  choice, Step 2's batch (branch, remote, tool folders, `.gitignore`), what to do about a
-  URL that did not answer, and the drafted file when "Show me the draft first" was picked.
-  Never ask in prose and wait for a typed reply
-- Ask everything Step 2 can ask in **one** call. A question that only reads the context
-  block does not need its own round trip, and none of Step 2's four depends on another
-- Never run `git init` outside the project root
-- Never guess a remote URL. It is typed by the user into the question's "Other" field or
-  it does not exist — never derived from `package.json`, a `gh` config, the directory
-  name, or the remote of a parent repo
-- Never touch a remote that is already configured. A repo with an `origin` keeps it
-  exactly as it is — not re-pointed, not renamed, not offered a replacement
-- A URL that does not answer is a warning, never a refusal. A repository not yet created
-  on the host, a private one, and a typo look identical from here — the user says which
-  it is
-- Never overwrite an existing `.gitignore` — append to it or leave it alone
-- A `.gitignore` the user never previewed is printed in full in the report. "Write it"
-  moves the reading from before the write to after it; it never skips the reading
-- Never put `.vscode/`, `.claude/` or the `pm` docs root into a `.gitignore` on your own
-  judgement. Those three are commonly committed on purpose, and silently ignoring one
-  hides work the user meant to share. Step 2's Ignore answer decides, always
-- Never offer to stage or commit anything here. This skill decides what git *ignores*;
-  what gets committed is `commit`'s job
-- Never push, and never offer to. The report prints `git push -u origin <base-branch>` as
-  text for after the first commit exists; running it is the user's move
-- `git init` and, when a URL was given, `git remote add origin` are the only writes this
-  skill makes to the repo; staging, committing and pushing belong elsewhere
+- Any git command you run during the task must be written so a non-zero exit cannot abort the step. Use `out=$(<command> 2>/dev/null) || true; echo "${out:-(marker)}"`, the same form the context block uses. Several git commands report an ordinary, expected answer through a non-zero status — `check-ignore` exits `1` for "not ignored", `config --get` exits `1` for "unset", `config --unset` exits `5` for "was not set", `rev-parse HEAD` exits `128` on a repo with no commits — and an unguarded one of those reads as a crash and stops work that should have continued
+- Do not re-run a context command just to confirm what is already printed above. Do re-check when its output contradicts itself or carries a shell error — a wrong answer is worth verifying — but re-run it in the guarded form, never bare, or the check fails the same way the original did
+- Never put an unquoted glob (`README*`, `*.md`) in a command. Shells disagree about an unmatched one: bash and `sh` pass it through literally, zsh aborts the whole command before it runs and prints `no matches found` — which no `2>/dev/null` can suppress, because the shell emits it during expansion rather than the command emitting it. The result is a confident wrong answer. List the directory and filter it instead: `ls -A | grep -iE "^(readme|license)"`
+
+## Integration
+
+- **During this skill**: [`licensing`](../licensing/SKILL.md), invoked in Step 5 whenever a `LICENSE` is being created or recreated
+- **After this skill**: [`commit`](../commit/SKILL.md), for the first conventional commit
 
 ---
 
 # Links
 
-- [gitignore-patterns](../docs/gitignore-patterns.md)
+- [gitignore-patterns](../commit/references/gitignore-patterns.md)
+- [templates](templates/)
+- [licensing](../licensing/SKILL.md)
+- [commit](../commit/SKILL.md)
