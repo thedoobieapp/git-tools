@@ -10,6 +10,8 @@ Versions here are the plugin's own, as recorded in
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-08-19
+
 ### Added
 
 - A seventh skill, `licensing` — it explains, compares and writes open-source
