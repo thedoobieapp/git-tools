@@ -46,7 +46,9 @@ broken_paths() {
     d="$(dirname "$f")"
     while IFS= read -r link; do
       [ -n "$link" ] || continue
-      target="$d/$link"
+      # An anchor names a heading inside the file, not a file of its own: the
+      # path is everything before the `#`.
+      target="$d/${link%%#*}"
       if [ ! -e "$target" ]; then
         printf '%s -> %s (missing)\n' "${f#"$root/"}" "$link"
         continue
