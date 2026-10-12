@@ -10,6 +10,8 @@ Versions here are the plugin's own, as recorded in
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-12
+
 ### Added
 
 - An eighth skill, `merge`. It merges an origin branch into a target only after
@@ -30,6 +32,22 @@ Versions here are the plugin's own, as recorded in
 
 - `branch` now points at `merge` for the end of the work. It used to name a
   `close-task` skill that never existed.
+- The licence file is now `LICENSE.md`, and the README's two references to it
+  moved with it.
+- The README's prose and table rows each sit on one line instead of being hard
+  wrapped, so an edit shows in a diff as the change it is rather than as a
+  paragraph rewritten around it. The SemVer spec in `versioning/references/` got
+  the same treatment, and the Conventional Commits spec now links to that local
+  copy instead of the SemVer site.
+- `BACKLOG.md` records the skills and rewrites that come next, so the intent
+  survives outside a conversation.
+
+### Fixed
+
+- The self-contained test reported a link with an anchor as missing. A link such
+  as `semantic-versioning-2.0.0.md#summary` was looked up as a file with the
+  `#summary` still on its name; the check now drops everything from the `#` on
+  before testing that the file exists.
 
 ## [0.7.0] - 2026-08-19
 
