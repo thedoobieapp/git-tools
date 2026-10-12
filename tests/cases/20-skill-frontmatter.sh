@@ -10,7 +10,7 @@
 . "$(dirname "$0")/../lib/harness.sh"
 
 test_the_expected_skills_are_the_ones_on_disk() {
-  desc "skills — the plugin ships exactly the seven skills this suite knows about"
+  desc "skills — the plugin ships exactly the eight skills this suite knows about"
   # A skill added without a line here is a skill nobody decided to test.
   #
   # Still seven, but not the same seven. `docs` was a carrier rather than a
@@ -18,8 +18,10 @@ test_the_expected_skills_are_the_ones_on_disk() {
   # install rather than be left behind. The references now sit beside the skills
   # that read them, so the carrier has nothing to carry and is gone. `licensing`
   # took the slot it vacated, and is a skill in the ordinary sense.
+  #
+  # Eight since `merge`, which finishes the work `branch` starts.
   found="$(for s in $(skill_files); do basename "$(dirname "$s")"; done | sort | tr '\n' ' ')"
-  assert_eq "$found" "branch changelog commit init licensing release versioning " \
+  assert_eq "$found" "branch changelog commit init licensing merge release versioning " \
     "the skill directories under skills/"
 }
 

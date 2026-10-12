@@ -85,7 +85,7 @@ Nothing is created until this step returns approval.
 
 - **Before this skill**: Make sure you're on the right base branch
 - **After this skill**: Use `commit` to make conventional commits on the new branch ([commit](../commit/SKILL.md))
-- **End of work**: Use `close-task` to merge, PR, or cleanup
+- **End of work**: Use `merge` to bring the branch into its target ([merge](../merge/SKILL.md))
 
 ## Rules
 

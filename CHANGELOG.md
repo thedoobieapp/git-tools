@@ -10,6 +10,27 @@ Versions here are the plugin's own, as recorded in
 
 ## [Unreleased]
 
+### Added
+
+- An eighth skill, `merge`. It merges an origin branch into a target only after
+  one confirmation covering the origin, the target and the merge type. There are
+  four types: a merge commit (`--no-ff`), which is always the recommendation and
+  keeps git's own message; fast-forward only; squash, with a conventional message
+  drafted and confirmed before anything runs; and rebase then fast-forward, which
+  warns when the origin has been pushed. Uncommitted work never rides along into
+  the merge: it is committed through `commit`, stashed and restored afterwards,
+  stashed and left, or the merge is cancelled. The skill asks every time whether
+  to stay local, fetch first, or fetch and offer a push, and never assumes one.
+  When git stops on conflicts, the user chooses between resolving them together,
+  file by file, and aborting back to where the merge started. Deleting the merged
+  branch is offered locally and on the remote, each with its own confirmation and
+  keeping it as the default.
+
+### Changed
+
+- `branch` now points at `merge` for the end of the work. It used to name a
+  `close-task` skill that never existed.
+
 ## [0.7.0] - 2026-08-19
 
 ### Added
