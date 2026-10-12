@@ -247,4 +247,4 @@ See [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
-[MIT](./LICENSE.md) © The Doobie Crew
+[MIT](LICENSE.md) © The Doobie Crew
