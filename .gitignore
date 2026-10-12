@@ -13,3 +13,6 @@ CLAUDE.md
 # git-tools: licensing refresh leftovers (references/ itself is tracked)
 skills/licensing/references-*/
 skills/licensing/.references.outgoing/
+
+# DOCS
+.docs/
