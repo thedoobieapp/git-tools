@@ -10,6 +10,30 @@ Versions here are the plugin's own, as recorded in
 
 ## [Unreleased]
 
+### Added
+
+- A ninth skill, `status`. It writes a page that shows the repository: a
+  dashboard (where HEAD is and the working-tree changes, recent commits, an
+  activity heatmap, worktrees, branch health and tags) and a commit graph where
+  a commit opens its message, parents, refs and changed files and branches can
+  be shown or hidden. The page is read-only and a snapshot; run the skill again
+  to refresh it. It comes in light and dark and in English and Brazilian
+  Portuguese, and remembers both choices in the browser.
+- The skill runs `skills/status/scripts/build.sh`, which gathers the git output
+  and writes `.claude/git-tools/status.html` beside `status-data.js`, the data
+  the page reads. It never fakes data: a page without its data file says so
+  instead of showing a sample.
+- `apps/status`, the source of that page (Vite, React and shadcn/ui). `pnpm
+  build` there builds a single-file page and exports it to
+  `skills/status/references/template.html`.
+
+### Changed
+
+- The test suite now knows about `status`: nine skills and 57 context
+  commands. Its path, shell-file and fingerprint scans skip `node_modules` and
+  `dist`, which `apps/status` brings into the plugin root.
+- `.gitignore` ignores `apps/status/node_modules/` and `apps/status/dist/`.
+
 ## [0.8.0] - 2026-10-12
 
 ### Added

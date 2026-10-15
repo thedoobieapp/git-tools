@@ -39,10 +39,18 @@ plugin_root_paths() {
 # entry saying so has to keep saying so. Holding a history to today's tree would
 # force every past entry to be rewritten by whoever moves a file next, which is
 # the one thing a changelog must not allow.
+# Copies the plugin as an install would: the tracked material, without the
+# dependency and build folders of apps/, which are ignored by git.
+copy_plugin() {
+  mkdir -p "$1"
+  tar -C "$PLUGIN_ROOT" --exclude node_modules --exclude dist -cf - . | tar -C "$1" -xf -
+}
+
 broken_paths() {
   local root="$1" f d link target parent abs
   root="$(abs_dir "$root")"
-  for f in $(find "$root" -type f -name '*.md' -not -path "$root/tests/*" -not -name CHANGELOG.md); do
+  for f in $(find "$root" -type f -name '*.md' -not -path "$root/tests/*" \
+      -not -path '*/node_modules/*' -not -path '*/dist/*' -not -name CHANGELOG.md); do
     d="$(dirname "$f")"
     while IFS= read -r link; do
       [ -n "$link" ] || continue
@@ -81,7 +89,7 @@ test_every_path_the_documents_name_resolves_inside_the_plugin() {
 test_the_plugin_is_whole_when_copied_somewhere_else() {
   desc "a copy of the plugin alone still resolves every path it names"
   # This is what installation does: the directory, and nothing around it.
-  cp -R "$PLUGIN_ROOT" ./git-tools
+  copy_plugin ./git-tools
   rm -rf ./git-tools/.git
   broken="$(broken_paths ./git-tools)"
   assert_empty "$broken" "a path only resolved because the marketplace was around it"
@@ -93,7 +101,7 @@ test_the_suite_runs_from_that_copy() {
     note "skipped: already running inside the nested copy"
     return 0
   fi
-  cp -R "$PLUGIN_ROOT" ./git-tools
+  copy_plugin ./git-tools
   rm -rf ./git-tools/.git
   # Only the context cases, and only one level deep: enough to prove the runner,
   # the harness and a case file work with nothing but the plugin on disk.
@@ -149,7 +157,7 @@ test_every_reference_file_is_used() {
 
 test_every_shell_file_parses_as_bash() {
   desc "every shell file the plugin carries parses as bash"
-  for s in $(find "$PLUGIN_ROOT" -type f -name '*.sh' | sort); do
+  for s in $(find "$PLUGIN_ROOT" -type f -name '*.sh' -not -path '*/node_modules/*' | sort); do
     bash -n "$s" 2>/dev/null || _fail "$(rel "$s") is not syntactically valid bash"
   done
 }
@@ -158,8 +166,8 @@ test_shipped_scripts_are_bash_3_2_and_bsd_safe() {
   desc "any script the plugin ships avoids bash 4 and GNU-only constructs"
   # bash 3.2.57 is what /bin/bash is on macOS: no mapfile/readarray, no
   # associative arrays, no ${var,,}. BSD sed needs an argument to -i; GNU sed
-  # refuses one. git-tools ships no scripts today — its skills are prose — so
-  # this passes vacuously and starts meaning something the day one lands.
+  # refuses one. the status skill ships scripts/build.sh, which this
+  # test keeps portable to the bash a user actually has.
   n=0
   for s in $(shipped_scripts); do
     n=$((n + 1))

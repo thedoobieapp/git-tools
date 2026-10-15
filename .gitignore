@@ -16,3 +16,7 @@ skills/licensing/.references.outgoing/
 
 # DOCS
 .docs/
+
+# git-tools: status page app (built output is skills/status/references/template.html)
+apps/status/node_modules/
+apps/status/dist/

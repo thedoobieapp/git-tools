@@ -70,7 +70,7 @@ test_the_context_command_count_is_unchanged() {
   for s in $(skill_files); do
     n=$((n + $(context_commands "$s" | grep -c .)))
   done
-  assert_eq "$n" "53" "53 context commands across the eight git-tools skills"
+  assert_eq "$n" "57" "57 context commands across the nine git-tools skills"
 }
 
 test_pipefail_fragile_commands_are_known() {

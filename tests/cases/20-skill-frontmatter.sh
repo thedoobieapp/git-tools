@@ -20,8 +20,10 @@ test_the_expected_skills_are_the_ones_on_disk() {
   # took the slot it vacated, and is a skill in the ordinary sense.
   #
   # Eight since `merge`, which finishes the work `branch` starts.
+  #
+  # Nine since `status`, which shows the repository as a page.
   found="$(for s in $(skill_files); do basename "$(dirname "$s")"; done | sort | tr '\n' ' ')"
-  assert_eq "$found" "branch changelog commit init licensing merge release versioning " \
+  assert_eq "$found" "branch changelog commit init licensing merge release status versioning " \
     "the skill directories under skills/"
 }
 

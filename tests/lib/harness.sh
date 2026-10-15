@@ -47,7 +47,7 @@ reference_files() {
 # on what they find rather than on a count, and start covering a script the day
 # one lands.
 shipped_scripts() {
-  find "$PLUGIN_ROOT" -type f -name '*.sh' -not -path "$TESTS_DIR/*" | sort
+  find "$PLUGIN_ROOT" -type f -name '*.sh' -not -path "$TESTS_DIR/*" -not -path '*/node_modules/*' | sort
 }
 
 # ---------------------------------------------------------------- reporting

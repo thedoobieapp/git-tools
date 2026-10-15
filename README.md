@@ -1,6 +1,6 @@
 # Git Tools
 
-A [Claude Code plugin](https://code.claude.com/docs/en/plugins.md) covering the everyday git workflow — putting a project under version control, licensing it, committing, branching, merging, keeping a changelog, versioning and cutting releases.
+A [Claude Code plugin](https://code.claude.com/docs/en/plugins.md) covering the everyday git workflow — putting a project under version control, licensing it, committing, branching, merging, seeing the state of the repository, keeping a changelog, versioning and cutting releases.
 
 Each skill is grounded in a published text rather than in house habit: [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/), [Conventional Branch 1.0.0](https://conventional-branch.github.io/), [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/), [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) and the [choosealicense.com](https://choosealicense.com/) licence catalogue. Each spec sits in a `references/` folder beside the `SKILL.md` that reads it, and a skill needing one it doesn't own reads it from the folder that does — so no two skills can drift apart on what a `feat` commit means or where a version number is kept.
 
@@ -15,6 +15,7 @@ Every decision that is the user's to make — the branch type, which licence a p
 | [`commit`](skills/commit/SKILL.md)         | Screens the files about to enter the commit for secrets, dependency directories, build output and OS cruft; groups the working set into the fewest commits that pass the "together test"; drafts a conventional message per group and confirms each one before it lands                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | [Conventional Commits 1.0.0](skills/commit/references/conventional-commits-1.0.0.md)             |
 | [`branch`](skills/branch/SKILL.md)         | Picks the prefix (`feat/`, `fix/`, `hotfix/`, `release/`, `chore/`), validates the name against the spec, and creates and switches to the branch                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | [Conventional Branch 1.0.0](skills/branch/references/conventional-branch-1.0.0.md)               |
 | [`merge`](skills/merge/SKILL.md)           | Merges an origin branch into a target after one confirmation of the origin, the target and the merge type — merge commit (`--no-ff`, always the recommendation), fast-forward only, squash, or rebase then fast-forward. Uncommitted work is committed through `commit` or stashed first, never carried along. Asks each time whether to stay local, fetch first, or fetch and offer a push. Stops on conflicts to resolve them together or abort, and offers to delete the merged branch, local and remote, each on its own confirmation | [Conventional Commits 1.0.0](skills/commit/references/conventional-commits-1.0.0.md), for a squash message |
+| [`status`](skills/status/SKILL.md)         | Writes the repository as a page you open in a browser: a dashboard (current branch and working-tree changes, recent commits, activity heatmap, worktrees, branch health, tags) and a commit graph where a commit opens its details and branches can be shown or hidden. It is a read-only snapshot with a light and a dark theme and English and Brazilian Portuguese, both remembered by the browser. A script gathers the git output into a data file beside the page; the page parses it, and shows a message rather than sample data when the file is missing | none |
 | [`changelog`](skills/changelog/SKILL.md)   | Creates a `CHANGELOG.md`, adds entries to `## [Unreleased]`, or promotes that section into a versioned one. Entries are written for humans, not copied from commit subjects                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | [Keep a Changelog 1.1.0](skills/changelog/references/keep-a-changelog-1.1.0.md)                  |
 | [`versioning`](skills/versioning/SKILL.md) | Detects the current version and every file carrying it, derives the bump from the conventional commits since the last tag, updates all of them together, and tags                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | [Semantic Versioning 2.0.0](skills/versioning/references/semantic-versioning-2.0.0.md)           |
 | [`release`](skills/release/SKILL.md)       | The whole sequence in one pass: bump, changelog promotion, every version file updated, one `chore: release X.Y.Z` commit and one annotated tag — behind a single confirmation. Pushes only when explicitly asked; local-only is the default                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | all of the above                                                                                 |
@@ -69,6 +70,7 @@ which licence fits this project?
 commit my changes
 start working on OAuth login
 merge this into master
+show me the git graph
 what changed since the last release?
 what should the next version be?
 release this
@@ -82,6 +84,7 @@ Or invoke a skill directly:
 /git-tools:commit
 /git-tools:branch
 /git-tools:merge
+/git-tools:status
 /git-tools:changelog
 /git-tools:versioning
 /git-tools:release
@@ -139,6 +142,10 @@ git-tools/
 │   │   ├── SKILL.md
 │   │   └── references/conventional-branch-1.0.0.md
 │   ├── merge/SKILL.md                     # Owns no reference; reads commit's for a squash
+│   ├── status/
+│   │   ├── SKILL.md
+│   │   ├── references/template.html       # The built page; exported from apps/status
+│   │   └── scripts/build.sh               # Gathers git output into status-data.js
 │   ├── changelog/
 │   │   ├── SKILL.md
 │   │   └── references/
@@ -150,6 +157,8 @@ git-tools/
 │   │       ├── semantic-versioning-2.0.0.md
 │   │       └── version-sources.md
 │   └── release/SKILL.md                   # Owns no reference; reads three across
+├── apps/
+│   └── status/                            # Source of the status page (Vite + React)
 ├── tests/                                 # The plugin's own suite — see Development
 │   ├── run-tests.sh
 │   ├── lib/harness.sh                     # desc/assert vocabulary, per-test temp dirs
@@ -189,6 +198,8 @@ The licence catalogue is a snapshot rather than a hand-kept list, and [`refresh-
 ## Development
 
 Edit a `SKILL.md` and reload the plugin — there is nothing to build.
+
+The one exception is the `status` page. Its source is `apps/status`; after changing it, run `pnpm build` there, which type-checks, builds one HTML file and exports it to `skills/status/references/template.html`. `pnpm dev` serves it against a real repository's data when `STATUS_REPO` points at one (set it in `apps/status/.env.local`).
 
 Validate the manifests and the skills:
 

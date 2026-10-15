@@ -35,7 +35,8 @@ filter="${1:-}"
 # refreshes on a timer. Either one would fail an otherwise clean run.
 plugin_fingerprint() {
   find "$PLUGIN_ROOT" -type f \
-      -not -path "$TESTS_DIR/*" -not -path "$PLUGIN_ROOT/.git/*" -not -name .DS_Store \
+      -not -path "$TESTS_DIR/*" -not -path "$PLUGIN_ROOT/.git/*" \
+      -not -path '*/node_modules/*' -not -path '*/dist/*' -not -name .DS_Store \
       -print0 2>/dev/null \
     | xargs -0 shasum 2>/dev/null \
     | sort
