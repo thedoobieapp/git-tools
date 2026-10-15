@@ -10,6 +10,8 @@ Versions here are the plugin's own, as recorded in
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-15
+
 ### Added
 
 - A ninth skill, `status`. It writes a page that shows the repository: a
